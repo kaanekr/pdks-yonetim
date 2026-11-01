@@ -3,17 +3,23 @@
 ## Windows programı
 
 1. İlk geçişte GitHub Releases'ten yeni `PDKS_Yonetim.exe` dosyasını indirin.
-   Eski programı kapatın; eski EXE'yi yedekleyip yenisini çalıştırın.
+   Eski programı kapatın; yenisini aynı konuma koyup çalıştırın. İlk manuel geçişte
+   kalan eski dosyayı kendiniz silebilirsiniz; sonraki otomatik güncellemelerde
+   geçici eski EXE kendiliğinden silinir.
 2. Sonraki sürümlerde **Güncelleme → Sürümleri kontrol et** seçin.
 3. **Dosyaları indir / hazırla** dosyaları doğrular; hiçbir şey kurmaz.
 4. **Windows programını güncelle** ayrıca onay ister. Kaydedilmemiş formları tamamlayın.
    Program kapanır; ayrı yardımcı eski işlemin kapanmasını doğrular, eski EXE'yi
-   `PDKS_Yonetim.previous.<kimlik>.exe` olarak korur ve atomik değiştirme yapar.
+   yalnız sağlık kontrolü boyunca geçici tutar ve atomik değiştirme yapar.
    Yeni EXE'nin izole sağlık kontrolü başarısızsa önceki EXE geri alınır.
+   Sağlık kontrolü başarılıysa geçici eski EXE silinir; eski sürüm geride bırakılmaz.
 
 Korumalı/izin verilmeyen klasörde işlem reddedilebilir; yönetici yetkisi kendiliğinden
-istenmez. Yedek EXE'yi silmeyin. PC arşivi ve bağlantı ayarları değiştirilmez.
-İşlem tamamlanmazsa güncelleme iş klasöründeki `update.log` ve eski EXE yedeği incelenir.
+istenmez. Otomatik temizlik yalnız `PDKS_Yonetim.previous.<kimlik>.exe`/`.tmp`
+dosyalarını ve eski güncelleme iş klasörlerini siler; başka dosyalara dokunmaz.
+PC arşivi ve bağlantı ayarları değiştirilmez. Yalnız geri alma da başarısız olursa
+eski EXE yedeği manuel kurtarma için kalabilir; güncelleme iş klasöründeki
+`update.log` incelenir.
 
 ## İlk OTA kurulumu — bir kez USB
 

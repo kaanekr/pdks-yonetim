@@ -27,11 +27,13 @@ TOOLS = ('check.ps1', 'release_signing.py', 'prepare_github_release.py', 'publis
          'test_buzzer.py', 'test_feedback.py', 'test_attendance_reset.py', 'test_console.py',
          'test_soft_sd_spi.py', 'test_panel.py', 'panel_fixture.py', 'test_display.py')
 NOTES = ('İmzalı GitHub güncellemeleri: Windows programı ve aynı yerel ağdaki ESP8266 firmware’i. '
-         '1.5.2, 1.5.1 firmware OTA hazırlığındaki BearSSL ikinci yığın hatasını düzeltir. '
+         'Windows 1.5.3, başarılı bir güncellemeden sonra eski EXE’yi siler; eski sürüm geride bırakılmaz. '
+         'Eski EXE yalnız yeni sürümün sağlık kontrolü sırasında tutulur; başarısızsa geri alınır. '
+         '1.5.3 firmware yalnız sürüm hizalamasıdır; işlevsel değişiklik yoktur ve cihaz 1.5.2 ile uyumludur. '
+         '1.5.2, 1.5.1 firmware OTA hazırlığındaki BearSSL ikinci yığın hatasını düzeltmişti. '
          'İlk OTA kurulumu bir kez özel USB kurulumu gerektirir. '
          'Kendiliğinden indirme/yükleme ve POST tekrarı yoktur. '
-         'İsimli kayıtlar, kalıcı silme, puantaj ve bağlantı/arşiv özellikleri korunur. '
-         'Fiziksel cihaz OTA kabulü 1.5.2 ile yapılmıştır; kayıtlar korunmuştur.')
+         'İsimli kayıtlar, kalıcı silme, puantaj ve bağlantı/arşiv özellikleri korunur.')
 
 
 def sha(data):

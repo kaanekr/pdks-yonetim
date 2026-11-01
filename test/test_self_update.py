@@ -184,7 +184,7 @@ class SelfUpdateTest(unittest.TestCase):
         self.assertEqual(target.read_bytes(), OLD)
         self.assertEqual(self.backups(target), [])
 
-    def test_apply_replaces_target_and_keeps_backup(self):
+    def test_apply_replaces_target_and_deletes_old_backup(self):
         job, descriptor, target = self.make_job()
         start, health, wait = mock.Mock(), mock.Mock(return_value=True), mock.Mock()
         with mock.patch.object(self_update, '_run_health', health), \
@@ -194,9 +194,7 @@ class SelfUpdateTest(unittest.TestCase):
                 mock.patch.object(self_update, 'verify_manifest', side_effect=verified):
             self.assertEqual(self_update.apply_update(descriptor), self_update.OK)
         self.assertEqual(target.read_bytes(), NEW)
-        backups = self.backups(target)
-        self.assertEqual(len(backups), 1)
-        self.assertEqual(backups[0].read_bytes(), OLD)
+        self.assertEqual(self.backups(target), [])
         self.assertEqual(wait.call_count, 1)
         self.assertEqual(health.call_args.args[2], VERSION)
         self.assertEqual(Path(start.call_args.args[0]), target.resolve())
@@ -211,7 +209,7 @@ class SelfUpdateTest(unittest.TestCase):
                 mock.patch.object(self_update, 'verify_manifest', side_effect=verified):
             self.assertEqual(self_update.apply_update(descriptor), self_update.ROLLED_BACK)
         self.assertEqual(target.read_bytes(), OLD)
-        self.assertEqual(self.backups(target)[0].read_bytes(), OLD)
+        self.assertEqual(self.backups(target), [])
         self.assertEqual(Path(start.call_args.args[0]), target.resolve())
 
     def test_apply_replace_failure_preserves_original(self):
@@ -224,7 +222,42 @@ class SelfUpdateTest(unittest.TestCase):
                 mock.patch.object(self_update, 'verify_manifest', side_effect=verified):
             self.assertEqual(self_update.apply_update(descriptor), self_update.FAILED)
         self.assertEqual(target.read_bytes(), OLD)
-        self.assertEqual(self.backups(target)[0].read_bytes(), OLD)
+        self.assertEqual(self.backups(target), [])
+
+    def test_cleanup_stale_removes_only_old_update_files(self):
+        app = self.folder/'cleanup-app'
+        app.mkdir()
+        backup = app/('PDKS_Yonetim.previous.' + 'a' * 32 + '.exe')
+        temp = app/('PDKS_Yonetim.previous.' + 'b' * 32 + '.tmp')
+        keep = app/'PDKS_Yonetim.exe'
+        unrelated = app/'notes.txt'
+        other = app/('PDKS_Yonetim.previous.' + 'z' * 32 + '.exe')
+        for path in (backup, temp, keep, unrelated, other):
+            path.write_bytes(b'x')
+        jobs = self.folder/'cleanup-jobs'
+        job = jobs/('c' * 32)
+        job.mkdir(parents=True)
+        (job/'leftover.bin').write_bytes(b'x')
+        self_update.cleanup_stale(app, jobs)
+        self.assertFalse(backup.exists())
+        self.assertFalse(temp.exists())
+        self.assertFalse(job.exists())
+        self.assertTrue(keep.exists())
+        self.assertTrue(unrelated.exists())
+        self.assertTrue(other.exists())
+
+    def test_cleanup_stale_keeps_a_failed_rollback_backup(self):
+        app = self.folder/'cleanup-failed-app'
+        app.mkdir()
+        backup = app/('PDKS_Yonetim.previous.' + 'f' * 32 + '.exe')
+        backup.write_bytes(b'old')
+        jobs = self.folder/'cleanup-failed-jobs'
+        job = jobs/('d' * 32)
+        job.mkdir(parents=True)
+        (job/self_update.LOG_NAME).write_text('rollback-failed\n', encoding='utf-8')
+        self_update.cleanup_stale(app, jobs)
+        self.assertTrue(backup.exists())
+        self.assertTrue(job.exists())
 
     def test_brief_windows_image_lock_is_retried_without_killing(self):
         job, descriptor, target = self.make_job()

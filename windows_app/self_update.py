@@ -2,8 +2,10 @@
 
 The running frozen EXE starts a detached copy of itself as
 ``PDKS_UpdateHelper.exe``; the copy waits for the app to exit, replaces the
-target EXE atomically and restores it when the new build fails its isolated
-health check. This module never closes the application. Signed manifest::
+target EXE atomically, keeps the old EXE only while the new build runs its
+isolated health check, and restores it on failure. After a successful check the
+old EXE backup is deleted; only a failed rollback may leave it for manual
+recovery. This module never closes the application. Signed manifest::
 
     {"version": "1.6.0", "sequence": 10600, "windows":
       {"target": "windows-x64", "name": "PDKS_Yonetim.exe",
@@ -19,6 +21,7 @@ from windows_app.update_contract import (CURRENT_SEQUENCE, CURRENT_VERSION, MANI
 WINDOWS_TARGET, HELPER_NAME = 'windows-x64', 'PDKS_UpdateHelper.exe'
 DESCRIPTOR_NAME, HEALTH_NAME, LOG_NAME = 'descriptor.json', 'health.json', 'update.log'
 BACKUP_PREFIX = 'PDKS_Yonetim.previous.'
+BACKUP_RE = re.compile(r'PDKS_Yonetim\.previous\.[0-9a-f]{32}\.(?:exe|tmp)')
 WAIT_SECONDS, HEALTH_SECONDS = 60, 30
 OK, ROLLED_BACK, FAILED = 0, 1, 2
 
@@ -80,6 +83,59 @@ def _discard(path):
         Path(path).unlink(missing_ok=True)
     except OSError:
         pass
+
+
+def cleanup_stale(app_folder=None, updates_root=None):
+    """Best-effort deletion of old self-update backups and helper jobs.
+
+    The normal app startup calls this after the update health-check path has
+    already returned. The health-check process must never call it: the helper
+    still needs the old EXE backup if the new build is rejected. If any helper
+    log records a failed rollback, the app backups and that job are kept for
+    manual recovery.
+    """
+    if app_folder is None:
+        if not getattr(sys, 'frozen', False):
+            return
+        app_folder = Path(sys.executable).resolve().parent
+    jobs = []
+    rollback_failed = False
+    try:
+        if updates_root is None:
+            base = os.environ.get('LOCALAPPDATA')
+            if base and Path(base).is_absolute():
+                updates_root = Path(base)/'PDKS_Yonetim'/'updates'
+        root = Path(updates_root) if updates_root is not None else None
+        if root is not None and root.is_dir():
+            for child in root.iterdir():
+                if child.is_symlink() or not child.is_dir():
+                    continue
+                jobs.append(child)
+                log = child/LOG_NAME
+                try:
+                    if log.is_file() and b'rollback-failed' in log.read_bytes():
+                        rollback_failed = True
+                except OSError:
+                    pass
+    except OSError:
+        pass
+    try:
+        if not rollback_failed:
+            for path in Path(app_folder).iterdir():
+                if path.is_symlink() or not path.is_file():
+                    continue
+                if BACKUP_RE.fullmatch(path.name):
+                    _discard(path)
+    except OSError:
+        pass
+    for child in jobs:
+        log = child/LOG_NAME
+        try:
+            if log.is_file() and b'rollback-failed' in log.read_bytes():
+                continue
+            shutil.rmtree(child)
+        except OSError:
+            pass
 
 
 def _copy_verified(source, destination, digest):
@@ -241,11 +297,13 @@ def _check_target(target, job):
 def _restore(target, backup, digest):
     target, backup = Path(target), Path(backup)
     if target.is_file() and _sha256(target) == digest:
+        _discard(backup)
         return True
     temp = target.parent/(BACKUP_PREFIX + uuid.uuid4().hex + '.tmp')
     try:
         _copy_verified(backup, temp, digest)
         _replace(temp, target)
+        _discard(backup)
         return True
     except (OSError, UpdateError):
         return False
@@ -299,7 +357,10 @@ def apply_update(descriptor_path) -> int:
     """Helper entry: re-verify and replace the target EXE.
 
     Returns OK on success, ROLLED_BACK when the health check restored the old
-    build, or FAILED when the replacement could not be completed.
+    build, or FAILED when the replacement could not be completed. The old EXE
+    backup is retained only until the health check passes; success and a
+    successful rollback remove it, while a failed rollback keeps it for manual
+    recovery.
     """
     _frozen_exe()
     descriptor_path = Path(descriptor_path)
@@ -342,4 +403,5 @@ def apply_update(descriptor_path) -> int:
         return ROLLED_BACK
     _log(job, 'updated')
     _start(target)
+    _discard(backup)
     return OK

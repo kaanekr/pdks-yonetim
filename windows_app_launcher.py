@@ -53,6 +53,7 @@ def main():
     parser.add_argument('--deletion-smoke-test', type=Path)
     parser.add_argument('--apply-update', type=Path)
     parser.add_argument('--update-health-check', type=Path)
+    parser.add_argument('--cleanup-stale', action='store_true')
     args = parser.parse_args()
     if args.apply_update:
         from windows_app.self_update import apply_update
@@ -74,6 +75,10 @@ def main():
         finally:
             app.close()
         return
+    if args.cleanup_stale:
+        from windows_app.self_update import cleanup_stale
+        cleanup_stale()
+        return
     if args.settings_smoke_test:
         settings_smoke(args.settings_smoke_test)
         return
@@ -87,7 +92,13 @@ def main():
         result = run_deletion_smoke(args.deletion_smoke_test)
         args.deletion_smoke_test.write_text(json.dumps(result), encoding='utf-8')
         return
+    # Never run this in --update-health-check: the helper still needs the old
+    # EXE backup until the new build's health report is accepted. The isolated
+    # smoke mode also skips profile-wide cleanup.
     from windows_app.gui import Manager
+    if not args.smoke_test:
+        from windows_app.self_update import cleanup_stale
+        cleanup_stale()
     root = tk.Tk()
     app = Manager(root, demo=args.demo or args.smoke_test is not None)
     if args.demo and args.smoke_test is None:

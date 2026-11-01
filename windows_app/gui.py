@@ -243,7 +243,7 @@ class Manager:
         self.updates_firmware_btn = ttk.Button(parent, text='Cihaz firmware’ini kablosuz güncelle…', command=self.install_firmware_update)
         self.updates_firmware_btn.pack(anchor='w', pady=8)
         ttk.Label(parent, text='İmza + SHA256 + hedef/sürüm kontrolü zorunlu. Eski sürüme otomatik dönüş yok. '
-            'Program güncellemesinde eski EXE yedeği korunur; yeni sürüm açılmazsa geri alınır. '
+            'Program güncellemesinde eski EXE yalnız sağlık kontrolü sırasında tutulur; yeni sürüm doğrulanınca silinir. Yeni sürüm açılmazsa geri alınır. '
             'Kayıt/ayar dosyaları değiştirilmez. Firmware yalnız aynı ağdaki, OTA destekli ve açık oturumu olmayan cihaza gönderilir.',
             wraplength=1000).pack(anchor='w', pady=10)
         ttk.Label(parent, text='Cihazın kurulum Wi-Fi ağında internet olmayabilir: dosyaları önce internet varken indirin, '
@@ -288,7 +288,7 @@ class Manager:
             messagebox.showinfo('Program güncelleme', 'Yeni sürüm yok veya paketli EXE kullanılmıyor.', parent=self.root)
             return
         if not messagebox.askyesno('Programı güncelle', 'v' + release.manifest['version'] +
-                ' doğrulanıp yüklenecek. Program kapanıp yeniden açılır; eski EXE yedeği korunur. Kaydedilmemiş formlarınızı tamamladınız mı?', parent=self.root):
+                ' doğrulanıp yüklenecek. Program kapanıp yeniden açılır; eski EXE sağlık kontrolünden sonra silinir. Yeni sürüm açılmazsa geri alınır. Kaydedilmemiş formlarınızı tamamladınız mı?', parent=self.root):
             return
         def done(path):
             from windows_app.self_update import prepare_self_update
