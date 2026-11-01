@@ -134,7 +134,7 @@ class ManifestTests(OfflineTest):
     def test_rejects_tampered_raw_and_signature(self):
         raw, signature = signed()
         with self.assertRaises(UpdateError):
-            updates.verify_manifest(raw.replace(b'1.5.1', b'1.5.2'), signature, PUBLIC_PEM)
+            updates.verify_manifest(raw.replace(CURRENT_VERSION.encode(), b'1.5.9'), signature, PUBLIC_PEM)
         with self.assertRaises(UpdateError):
             updates.verify_manifest(raw, signature[:-1], PUBLIC_PEM)
         with self.assertRaises(UpdateError):
@@ -213,7 +213,7 @@ class ReleaseTests(OfflineTest):
         raw, signature = signed()
         base = release_document(CURRENT_VERSION, raw, signature)
         variants = []
-        for change in ({'draft': True}, {'prerelease': True}, {'tag_name': 'v1.5.2'},
+        for change in ({'draft': True}, {'prerelease': True}, {'tag_name': 'v1.5.9'},
                        {'tag_name': 'release-1.5.1'}, {'assets': []}):
             document = json.loads(json.dumps(base))
             document.update(change)

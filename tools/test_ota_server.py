@@ -319,6 +319,12 @@ PGMSPACE_H = r'''#pragma once
 #endif
 '''
 
+STACKTHUNK_H = r'''#pragma once
+// The host fake verifier is synchronous; the real ESP8266 second stack is not needed.
+inline void stack_thunk_add_ref() {}
+inline void stack_thunk_del_ref() {}
+'''
+
 SOURCE = r'''// Generated harness: compiles the real src/FirmwareOta.cpp in this translation
 // unit so its anonymous-namespace state can be reset between cases.
 #include <cstdio>
@@ -992,6 +998,7 @@ def main():
     (MOCKS/'BearSSLHelpers.h').write_text(BEARSSL_H, encoding='utf-8')
     (MOCKS/'Updater.h').write_text(UPDATER_H, encoding='utf-8')
     (MOCKS/'pgmspace.h').write_text(PGMSPACE_H, encoding='utf-8')
+    (MOCKS/'StackThunk.h').write_text(STACKTHUNK_H, encoding='utf-8')
     source = OUT/'ota_server_main.cpp'
     source.write_text(SOURCE, encoding='utf-8')
 

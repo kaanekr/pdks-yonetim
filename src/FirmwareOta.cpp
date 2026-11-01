@@ -7,6 +7,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include <BearSSLHelpers.h>
+#include <StackThunk.h>
 #include <Updater.h>
 #include <string.h>
 #include "Attendance.h"
@@ -31,6 +32,10 @@ struct Prepared {
   char sha[65]={}, token[33]={};
   bool ready=false;
 } prepared;
+// The ESP8266 loop stack is small; keep the large fixed buffers out of the
+// web handler frame. The server is single-threaded, so reuse is safe.
+char envelope[ota_policy::ENVELOPE_MAX+1];
+uint8_t decoded[256];
 bool active=false, ended=false, seen=false, reboot=false;
 uint32_t received=0, restartAt=0;
 uint8_t tail[4]={};
@@ -70,7 +75,8 @@ void prepare() {
   if (!secure()) { reply(403,false,"KIMLIK/CSRF REDDEDILDI"); return; }
   if (web->arg("plain").length()>1024) { reply(413,false,"ISTEK COK BUYUK"); return; }
   prepared=Prepared(); error=nullptr; seen=false; ended=false; received=0; tailCount=0;
-  StaticJsonDocument<1536> doc;
+  DynamicJsonDocument doc(1536);
+  if (doc.capacity()<1536) { reply(500,false,"BELLEK YETERSIZ"); return; }
   if (deserializeJson(doc,web->arg("plain"))) { reply(400,false,"JSON GECERSIZ"); return; }
   const char *target,*version,*digest,*signature,*confirm;
   if (!textField(doc,"target",target) || !textField(doc,"version",version) ||
@@ -86,7 +92,6 @@ void prepare() {
       doc["journal_revision"].as<uint32_t>()!=storage::journalRevision()) {
     reply(409,false,"DURUM DEGISTI/ACIK OTURUM/ESKI SURUM; YENILEYIN"); return;
   }
-  char envelope[ota_policy::ENVELOPE_MAX+1]; uint8_t decoded[256];
   const size_t length=ota_policy::envelope(envelope,sizeof(envelope),target,version,offered,size,digest);
   if (!length || !ota_policy::decodeSignature(signature,decoded)) { reply(400,false,"IMZALI META GECERSIZ"); return; }
   envelopeHash.begin(); envelopeHash.add(envelope,length); envelopeHash.end();
@@ -158,6 +163,9 @@ void finish() {
 } // namespace
 void setup(ESP8266WebServer& server,Attendance& attendance,const char* token,const bool* storageHealthy) {
   web=&server; core=&attendance; csrf=token; healthy=storageHealthy;
+  // Manual installSignature does not initialise the BearSSL second stack.
+  // SigningVerifier::verify thunks onto it; without this the device resets.
+  stack_thunk_add_ref();
   Update.installSignature(&imageHash,&verifier);
   web->on("/api/update/prepare",HTTP_POST,prepare);
   web->on("/api/update/firmware",HTTP_POST,finish,upload);

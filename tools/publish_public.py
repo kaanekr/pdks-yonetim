@@ -31,7 +31,7 @@ def api(path, method='GET', data=None, optional=False):
     return gh('api', path, '--method', method, data=data, optional=optional)
 
 
-def publish_source(stage):
+def publish_source(stage, parent_commit=None):
     expected = source_files()
     staged = {p.relative_to(stage).as_posix(): p.read_bytes() for p in stage.rglob('*') if p.is_file()}
     if staged != expected:
@@ -42,6 +42,8 @@ def publish_source(stage):
         raise RuntimeError('Expected the explicitly approved public main-branch repository.')
     ref = api('repos/'+REPOSITORY+'/git/ref/heads/main', optional=True)
     if ref is None:
+        if parent_commit:
+            raise RuntimeError('A parent was supplied but the repository has no main ref.')
         if api('repos/'+REPOSITORY+'/contents', optional=True) is not None or repo['size'] != 0:
             raise RuntimeError('Repository is not the approved empty repository; refusing initialization.')
         initial = api('repos/'+REPOSITORY+'/contents/README.md', 'PUT', dict(
@@ -49,8 +51,14 @@ def publish_source(stage):
             content=base64.b64encode(staged['README.md']).decode('ascii')))
         parent = initial['commit']['sha']
     else:
-        # Never overwrite an unexpectedly modified remote tree without an explicit new review.
-        raise RuntimeError('Repository already has commits; review remote changes before a subsequent source publication.')
+        # A later publication must name the reviewed remote head explicitly; never
+        # silently overwrite a tree that moved after the previous release.
+        current = ref['object']['sha']
+        if not parent_commit:
+            raise RuntimeError('Repository already has commits; review remote changes and pass --parent <main SHA>.')
+        if current != parent_commit:
+            raise RuntimeError('Remote main is not the reviewed parent; refusing a speculative source update.')
+        parent = current
     tree = []
     for name, content in sorted(staged.items()):
         entry = dict(path=name, mode='100644', type='blob')
@@ -107,9 +115,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--assets', type=Path, required=True)
+    parser.add_argument('--parent', help='reviewed current main commit for a source update')
     parser.add_argument('--publish', action='store_true', required=True)
     args = parser.parse_args()
     if api('user')['login'] != REPOSITORY.split('/')[0]:
         raise RuntimeError('Authenticated publisher is not the approved account.')
-    commit = publish_source(args.source)
+    commit = publish_source(args.source, args.parent)
     publish_release(args.assets, commit)
