@@ -338,8 +338,8 @@ class GuiUpdateTest(UpdateFixture):
         self.assertIs(self.app.update_release, self.release_info)
         self.assertEqual(self.app.update_downloads, {})
         text = self.app.update_text.get()
-        self.assertIn('1.6.0', text)
-        self.assertIn('yeni Windows sürümü var', text)
+        self.assertIn('Yeni sürüm hazır', text)
+        self.assertNotIn('1.6.0', text)
 
     def test_download_updates_verifies_and_records_both_files(self):
         self.app.demo, self.app.settings = False, None
@@ -356,7 +356,7 @@ class GuiUpdateTest(UpdateFixture):
         self.assertEqual(set(self.app.update_downloads), {'windows', 'firmware'})
         for kind, path in self.app.update_downloads.items():
             self.assertTrue(Path(path).is_file(), kind)
-        self.assertIn('Dosyalar doğrulandı', self.app.update_text.get())
+        self.assertIn('Güncelleme hazır', self.app.update_text.get())
 
     def test_firmware_confirmation_cancel_never_backs_up_or_uploads(self):
         client, opener = self.arm_firmware()
@@ -456,7 +456,7 @@ class GuiUpdateTest(UpdateFixture):
                 patch.object(self.app, 'job') as job:
             self.app.install_firmware_update()
         error.assert_called_once()
-        self.assertIn('OTA', error.call_args[0][1])
+        self.assertIn('USB', error.call_args[0][1])
         job.assert_not_called()
         self.assertEqual(opener.calls, [])
         self.assertFalse(self.app.firmware_update_pending)

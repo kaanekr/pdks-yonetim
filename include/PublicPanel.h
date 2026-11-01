@@ -1,0 +1,1375 @@
+#pragma once
+#include <pgmspace.h>
+static const char PDKS_PANEL_HTML[] PROGMEM = R"PDKS_PANEL(<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="referrer" content="no-referrer">
+  <title>PDKS · Mesai Paneli</title>
+  <style>
+    :root {
+      --bg: #eef2f5;
+      --surface: #ffffff;
+      --surface-2: #f6f8fa;
+      --text: #16232d;
+      --muted: #5b6b78;
+      --border: #d9e1e7;
+      --border-strong: #b9c6d0;
+      --accent: #0b5fbf;
+      --accent-contrast: #ffffff;
+      --ok: #0d6b45;
+      --ok-bg: #e4f5ec;
+      --bad: #a4261f;
+      --bad-bg: #fdeceb;
+      --warn: #7a4b00;
+      --warn-bg: #fff4dc;
+      --warn-border: #e7c26b;
+      --off: #52616c;
+      --off-bg: #eef1f3;
+      --focus: #0b5fbf;
+      --shadow: 0 1px 2px rgba(16, 34, 48, .05), 0 8px 24px rgba(16, 34, 48, .04);
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0c1319;
+        --surface: #131d25;
+        --surface-2: #182530;
+        --text: #e9f0f5;
+        --muted: #a5b6c2;
+        --border: #263743;
+        --border-strong: #3a4f5e;
+        --accent: #72b7ff;
+        --accent-contrast: #07131d;
+        --ok: #68d6a4;
+        --ok-bg: #103328;
+        --bad: #ff9b93;
+        --bad-bg: #3a1b1a;
+        --warn: #f2c477;
+        --warn-bg: #332711;
+        --warn-border: #6b5222;
+        --off: #b0bcc4;
+        --off-bg: #1d2a33;
+        --focus: #8cc7ff;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 30px rgba(0, 0, 0, .25);
+        color-scheme: dark;
+      }
+    }
+
+    :root[data-theme="light"] {
+      --bg: #eef2f5;
+      --surface: #ffffff;
+      --surface-2: #f6f8fa;
+      --text: #16232d;
+      --muted: #5b6b78;
+      --border: #d9e1e7;
+      --border-strong: #b9c6d0;
+      --accent: #0b5fbf;
+      --accent-contrast: #ffffff;
+      --ok: #0d6b45;
+      --ok-bg: #e4f5ec;
+      --bad: #a4261f;
+      --bad-bg: #fdeceb;
+      --warn: #7a4b00;
+      --warn-bg: #fff4dc;
+      --warn-border: #e7c26b;
+      --off: #52616c;
+      --off-bg: #eef1f3;
+      --focus: #0b5fbf;
+      --shadow: 0 1px 2px rgba(16, 34, 48, .05), 0 8px 24px rgba(16, 34, 48, .04);
+      color-scheme: light;
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0c1319;
+      --surface: #131d25;
+      --surface-2: #182530;
+      --text: #e9f0f5;
+      --muted: #a5b6c2;
+      --border: #263743;
+      --border-strong: #3a4f5e;
+      --accent: #72b7ff;
+      --accent-contrast: #07131d;
+      --ok: #68d6a4;
+      --ok-bg: #103328;
+      --bad: #ff9b93;
+      --bad-bg: #3a1b1a;
+      --warn: #f2c477;
+      --warn-bg: #332711;
+      --warn-border: #6b5222;
+      --off: #b0bcc4;
+      --off-bg: #1d2a33;
+      --focus: #8cc7ff;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 30px rgba(0, 0, 0, .25);
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h2 { font-size: 1.05rem; margin-bottom: .65rem; letter-spacing: .01em; }
+    h3 { font-size: .95rem; margin-bottom: .35rem; }
+    a { color: var(--accent); }
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      z-index: 100;
+      padding: .7rem 1rem;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      border-radius: 0 0 8px 0;
+    }
+    .skip-link:focus { left: 0; }
+    .visually-hidden {
+      position: absolute !important;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0);
+      white-space: nowrap; border: 0;
+    }
+    [hidden] { display: none !important; }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem clamp(1rem, 4vw, 2rem);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; gap: .8rem; align-items: center; min-width: 0; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 46px; height: 46px;
+      flex: 0 0 auto;
+      border-radius: 12px;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-weight: 800;
+      font-size: .78rem;
+      letter-spacing: .06em;
+    }
+    .brand h1 { font-size: clamp(1.05rem, 2.6vw, 1.35rem); margin: 0; }
+    .brand .sub { margin: .1rem 0 0; color: var(--muted); font-size: .8rem; }
+    .top-actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+    .device-clock { text-align: right; }
+    .device-clock .label {
+      display: block;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .device-clock time {
+      display: block;
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .device-clock .hint { display: block; font-size: .72rem; color: var(--muted); }
+
+    main {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: clamp(1rem, 3vw, 1.6rem);
+    }
+    section { margin-bottom: 1rem; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: clamp(.9rem, 2.5vw, 1.2rem);
+      box-shadow: var(--shadow);
+    }
+    .panel + .panel { margin-top: .8rem; }
+    .muted { color: var(--muted); }
+    .small { font-size: .82rem; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+    .num { font-variant-numeric: tabular-nums; }
+
+    .banner {
+      margin: 0;
+      padding: .75rem clamp(1rem, 4vw, 2rem);
+      background: var(--bad-bg);
+      color: var(--bad);
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+    .banner.notice {
+      background: var(--warn-bg);
+      color: var(--warn);
+    }
+    .banner .banner-detail { display: block; font-weight: 400; font-size: .84rem; margin-top: .15rem; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: .7rem; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .34rem .7rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: .8rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .chip-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--off);
+      flex: 0 0 auto;
+    }
+    .chip[data-state="ok"] { background: var(--ok-bg); color: var(--ok); border-color: transparent; }
+    .chip[data-state="ok"] .chip-dot { background: var(--ok); }
+    .chip[data-state="bad"] { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
+    .chip[data-state="bad"] .chip-dot { background: var(--bad); }
+    .chip[data-state="warn"] { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+    .chip[data-state="warn"] .chip-dot { background: var(--warn); }
+    .chip[data-state="off"] { background: var(--off-bg); color: var(--off); }
+    .chip[data-state="off"] .chip-dot { background: var(--off); }
+
+    .status-line { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; align-items: baseline; }
+    .status-line p { margin: 0; }
+    .health { margin: .55rem 0 0; font-size: .88rem; }
+    .health[data-state="bad"] { color: var(--bad); }
+    .health[data-state="warn"] { color: var(--warn); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+      gap: .7rem;
+    }
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: .85rem .9rem;
+      box-shadow: var(--shadow);
+    }
+    .metric h3 {
+      font-size: .76rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: .25rem;
+    }
+    .metric-value { margin: 0; font-size: 1.55rem; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1.2; }
+    .metric-sub { margin: .2rem 0 0; font-size: .74rem; color: var(--muted); }
+
+    .btn {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      min-height: 42px;
+      padding: .55rem .9rem;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      font: inherit;
+      font-weight: 650;
+      line-height: 1.2;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+    .btn-secondary { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:focus-visible, input:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .btn:disabled { opacity: .55; cursor: not-allowed; filter: none; }
+    .small-btn { min-height: 34px; padding: .32rem .65rem; font-size: .8rem; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: .9rem;
+      align-items: start;
+    }
+    form { margin: 0; }
+    .field { margin-bottom: .7rem; }
+    label { display: block; font-weight: 650; font-size: .88rem; margin-bottom: .28rem; }
+    input[type="text"], input[type="datetime-local"] {
+      width: 100%;
+      padding: .58rem .68rem;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      font: inherit;
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="text"] { text-transform: uppercase; }
+    input[aria-invalid="true"] { border-color: var(--bad); }
+    .field-help { margin: .25rem 0 0; font-size: .76rem; color: var(--muted); }
+    .field-help.is-error { color: var(--bad); font-weight: 600; }
+    .form-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .4rem; }
+    .result { min-height: 1.4em; margin: .55rem 0 0; font-size: .86rem; font-weight: 600; }
+    .result[data-kind="ok"] { color: var(--ok); }
+    .result[data-kind="error"] { color: var(--bad); }
+    .result[data-kind="warn"] { color: var(--warn); }
+
+    .panel-head { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; align-items: baseline; margin-bottom: .7rem; }
+    .panel-head h2 { margin: 0; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; }
+    caption { padding: .55rem .75rem; text-align: left; font-size: .8rem; color: var(--muted); }
+    th, td { padding: .62rem .75rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th {
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: .74rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+    tbody tr:last-child td { border-bottom: 0; }
+    td.right, th.right { text-align: right; font-variant-numeric: tabular-nums; }
+    .badge {
+      display: inline-block;
+      padding: .18rem .55rem;
+      border-radius: 999px;
+      font-size: .76rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-inside { background: var(--ok-bg); color: var(--ok); }
+    .badge-outside { background: var(--off-bg); color: var(--off); }
+    .empty-row td { color: var(--muted); text-align: center; padding: 1.3rem .75rem; }
+
+    .notice {
+      border: 1px solid var(--warn-border);
+      background: var(--warn-bg);
+      color: var(--warn);
+      border-radius: 12px;
+      padding: .8rem .95rem;
+    }
+    .notice h2 { color: inherit; }
+    .notice ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+    .notice li { margin: .3rem 0; }
+    .notice strong { font-weight: 750; }
+
+    .page-footer {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 0 clamp(1rem, 3vw, 1.6rem) 2rem;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+    .page-footer p { margin: .3rem 0; }
+
+    @media (max-width: 620px) {
+      .device-clock { text-align: left; }
+      .top-actions { width: 100%; justify-content: space-between; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">İçeriğe geç</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">PDKS</span>
+      <div>
+        <h1>Mesai Giriş / Çıkış Paneli</h1>
+        <p class="sub">NodeMCU ESP8266 · çevrimdışı · USB deney prototipi</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="device-clock">
+        <span class="label">Cihaz saati</span>
+        <time id="deviceClock">—</time>
+        <span class="hint" id="clockHint">Durum bekleniyor</span>
+      </div>
+      <button type="button" class="btn btn-secondary" id="themeToggle" aria-pressed="false">Koyu tema</button>
+    </div>
+  </header>
+
+  <div class="banner" id="connectionBanner" role="status" hidden>
+    <span id="connectionText">Cihaza ulaşılamıyor.</span>
+    <span class="banner-detail" id="connectionDetail">Gösterilen bilgiler son başarılı yanıttan ve eski olabilir; işlem yapmayın.</span>
+  </div>
+
+  <main id="main" tabindex="-1">
+    <section class="panel" aria-labelledby="statusHeading">
+      <div class="status-line">
+        <h2 id="statusHeading">Cihaz durumu</h2>
+        <button type="button" class="btn btn-secondary small-btn" id="refreshButton">Durumu yenile</button>
+      </div>
+      <div class="chips" id="statusChips">
+        <span class="chip" id="chipStorage" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Kayıt alanı: bekleniyor</span></span>
+        <span class="chip" id="chipClock" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Saat: bekleniyor</span></span>
+        <span class="chip" id="chipRfid" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Kart okuyucu: bekleniyor</span></span>
+        <span class="chip" id="chipOled" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Ekran: bekleniyor</span></span>
+        <span class="chip" id="chipSd" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">SD yedek: bekleniyor</span></span>
+      </div>
+      <p class="health" id="healthNote">Cihazdan durum bilgisi bekleniyor…</p>
+      <p class="small muted">Son güncelleme: <span id="lastSync">—</span></p>
+    </section>
+
+    <section aria-labelledby="metricsHeading">
+      <h2 id="metricsHeading" class="visually-hidden">Özet</h2>
+      <div class="metrics">
+        <article class="metric" aria-labelledby="metricEmployeesLabel">
+          <h3 id="metricEmployeesLabel">Personel</h3>
+          <p class="metric-value" id="metricEmployees">—</p>
+          <p class="metric-sub">en fazla 32 kalıcı eşleme</p>
+        </article>
+        <article class="metric" aria-labelledby="metricInsideLabel">
+          <h3 id="metricInsideLabel">Şu an içeride</h3>
+          <p class="metric-value" id="metricInside">—</p>
+          <p class="metric-sub">açık oturum sayısı</p>
+        </article>
+        <article class="metric" aria-labelledby="metricTotalLabel">
+          <h3 id="metricTotalLabel">Tamamlanan toplam</h3>
+          <p class="metric-value" id="metricTotal">—</p>
+          <p class="metric-sub">ömür boyu toplam · günlük puantaj değildir</p>
+        </article>
+        <article class="metric" aria-labelledby="metricLiveLabel">
+          <h3 id="metricLiveLabel">Açık oturum süresi</h3>
+          <p class="metric-value" id="metricLive">—</p>
+          <p class="metric-sub">tamamlanan toplama eklenmez</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="formsHeading">
+      <h2 id="formsHeading" class="visually-hidden">Kayıt ve saat ayarları</h2>
+      <div class="form-grid">
+        <form id="employeeForm" novalidate autocomplete="off">
+          <h2>Personel kaydı</h2>
+          <input type="hidden" id="uidInput" name="uid">
+          <div class="field">
+            <label for="nameInput">Ad soyad</label>
+            <input type="text" id="nameInput" name="name" maxlength="48" spellcheck="false" autocomplete="off" aria-describedby="nameHelp">
+            <p class="field-help" id="nameHelp">En fazla 48 karakter; boş bırakılamaz.</p>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="fillUidButton" disabled>Son okutulan kartı kullan</button>
+            <button type="submit" class="btn btn-primary" id="employeeSubmit" disabled>Personeli kaydet</button>
+          </div>
+          <p class="result" id="employeeResult" role="status" aria-live="polite"></p>
+          <p class="small muted">Kartı okutun, “Son okutulan kartı kullan” ile forma alın, adı yazıp kaydedin. Aynı kart yeniden kaydedilirse yalnızca ad güncellenir; açık oturum ve toplam süre korunur. Personel silme bu sürümde yoktur.</p>
+        </form>
+
+        <form id="timeForm" novalidate autocomplete="off">
+          <h2>Cihaz saati</h2>
+          <div class="field">
+            <label for="timeInput">Yeni saat (Türkiye)</label>
+            <input type="datetime-local" id="timeInput" name="time" step="1" min="2024-01-01T00:00:00" max="2099-12-31T23:59:59" aria-describedby="timeHelp">
+            <p class="field-help" id="timeHelp">Cihaz saati Türkiye yerel saatidir. Yıl 2024–2099 aralığında olmalıdır.</p>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="fillNowButton">Şimdiki saati doldur</button>
+            <button type="submit" class="btn btn-primary" id="timeSubmit" disabled>Saati ayarla</button>
+          </div>
+          <p class="result" id="timeResult" role="status" aria-live="polite"></p>
+          <p class="small muted">Açık oturum varken veya yeni saat son kayıtlı olaydan önceyse değişiklik reddedilir. Saat ayarlanmamışken kart okutmaları reddedilir; önce buradan saat ayarlayın.</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="tableHeading">
+      <div class="panel-head">
+        <h2 id="tableHeading">Personel ve oturumlar</h2>
+        <p class="small muted" id="tableUpdated">—</p>
+      </div>
+      <p class="small muted">Saatler cihazın Türkiye saatini gösterir. “Tamamlanan toplam” tüm geçmiş oturumların toplamıdır, günlük puantaj değildir. Açık oturum süresi ayrı gösterilir ve tamamlanan toplama eklenmez.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Kayıtlı personel, giriş/çıkış durumu ve süreler</caption>
+          <thead>
+            <tr>
+              <th scope="col">Ad soyad</th>
+              <th scope="col">Durum</th>
+              <th scope="col">Giriş (cihaz saati)</th>
+              <th scope="col" class="right">Tamamlanan toplam</th>
+              <th scope="col" class="right">Açık oturum</th>
+            </tr>
+          </thead>
+          <tbody id="employeeRows">
+            <tr class="empty-row"><td colspan="5">Henüz personel yok. Kartı okutup ad ekleyin.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted" id="employeeCount">—</p>
+    </section>
+
+    <section class="notice" aria-labelledby="limitsHeading">
+      <h2 id="limitsHeading">Güvenlik, gizlilik ve çalışma sınırları</h2>
+      <ul>
+        <li><strong>Şifreler:</strong> Kurulum ağı ve panel şifrelerini ilk kullanımdan önce değiştirin. Bu panel şifreleri göstermez ve saklamaz.</li>
+        <li><strong>Kilit yok:</strong> Bu sürüm kilit, turnike veya motor sürmez; yalnızca mesai kaydı ve raporlama yapar. Kapı açma için kullanılmamalıdır.</li>
+        <li><strong>Kart kimliği kopyalanabilir:</strong> Kart kimliği kolayca kopyalanabilir. Bu sistem ticari sertifikalı bir güvenlik ürünü değildir; yüksek güvenlik gereken yerlerde tek başına kullanılmamalıdır.</li>
+        <li><strong>Kişisel veri:</strong> Ad ve mesai kayıtları kişisel veridir. Erişim yetkisi, saklama süresi, yedekleme ve silme yükümlülükleri KVKK kapsamında kullanıcıya aittir.</li>
+        <li><strong>Unutulan çıkış:</strong> Açık oturum kapatılmazsa sonraki günü de kapsar; bu sürümde manuel düzeltme yoktur. Kısa aralıkla yapılan yeniden okutma çıkış kaydına dönüşebilir; yeni işlem için kartı önce okuyucudan uzaklaştırın.</li>
+        <li><strong>SD yedek isteğe bağlı:</strong> Kayıtlar önce cihazın kendi kayıt alanına yazılır; SD kart takılı değilken de sistem çalışır. SD kart, tüm geçmişin eksiksiz bir kopyası garantisi değildir.</li>
+        <li><strong>Güç:</strong> Yalnızca USB 5 V / yaklaşık 1 A deney düzeneği kullanın. 220 V bağlantısı, röle veya turnike motoru yoktur. Sigorta yerine direnç kullanılmamalıdır.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>Bu panel yalnızca aynı yerel ağdaki cihazla konuşur; internet veya bulut bağlantısı kullanmaz. Varsayılan şifrelerle sahaya çıkarmayın.</p>
+    <p class="small">Kart kimliği kopyalanabilir; bu sistem sertifikalı bir güvenlik ürünü değildir. Kişisel veriler için KVKK yükümlülükleri size aittir.</p>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var POLL_MS = 3000;
+      var FETCH_TIMEOUT_MS = 5000;
+      var STALE_MS = 9000;
+      var MAX_EMPLOYEES = 32;
+
+      var state = {
+        csrf: '',
+        status: null,
+        lastSuccessAt: 0,
+        failures: 0,
+        inFlight: null,
+        posting: false,
+        deviceEpochBase: null,
+        devicePerfBase: 0,
+        clockOk: false,
+        timer: null,
+        timeTouched: false,
+        firstStatus: true
+      };
+
+      function byId(id) { return document.getElementById(id); }
+
+      var ui = {
+        deviceClock: byId('deviceClock'),
+        clockHint: byId('clockHint'),
+        themeToggle: byId('themeToggle'),
+        banner: byId('connectionBanner'),
+        connectionText: byId('connectionText'),
+        connectionDetail: byId('connectionDetail'),
+        refreshButton: byId('refreshButton'),
+        chipStorage: byId('chipStorage'),
+        chipClock: byId('chipClock'),
+        chipRfid: byId('chipRfid'),
+        chipOled: byId('chipOled'),
+        chipSd: byId('chipSd'),
+        healthNote: byId('healthNote'),
+        lastSync: byId('lastSync'),
+        fillUidButton: byId('fillUidButton'),
+        metricEmployees: byId('metricEmployees'),
+        metricInside: byId('metricInside'),
+        metricTotal: byId('metricTotal'),
+        metricLive: byId('metricLive'),
+        employeeForm: byId('employeeForm'),
+        uidInput: byId('uidInput'),
+        nameInput: byId('nameInput'),
+        employeeSubmit: byId('employeeSubmit'),
+        employeeResult: byId('employeeResult'),
+        timeForm: byId('timeForm'),
+        timeInput: byId('timeInput'),
+        fillNowButton: byId('fillNowButton'),
+        timeSubmit: byId('timeSubmit'),
+        timeResult: byId('timeResult'),
+        employeeRows: byId('employeeRows'),
+        employeeCount: byId('employeeCount'),
+        tableUpdated: byId('tableUpdated')
+      };
+
+      function pad2(value) {
+        return (value < 10 ? '0' : '') + value;
+      }
+
+      // Epoch is a LOCAL Turkish calendar encoded as if it were UTC.
+      // UTC getters are therefore intentional: they print the stored wall clock.
+      function formatDeviceEpoch(epoch) {
+        if (typeof epoch !== 'number' || !isFinite(epoch) || epoch <= 0) {
+          return '—';
+        }
+        var date = new Date(epoch * 1000);
+        if (isNaN(date.getTime())) {
+          return '—';
+        }
+        return date.getUTCFullYear() + '-' + pad2(date.getUTCMonth() + 1) + '-' + pad2(date.getUTCDate()) +
+          ' ' + pad2(date.getUTCHours()) + ':' + pad2(date.getUTCMinutes()) + ':' + pad2(date.getUTCSeconds());
+      }
+
+      function epochToLocalInputValue(epoch) {
+        if (typeof epoch !== 'number' || !isFinite(epoch) || epoch <= 0) {
+          return '';
+        }
+        var date = new Date(epoch * 1000);
+        if (isNaN(date.getTime())) {
+          return '';
+        }
+        return date.getUTCFullYear() + '-' + pad2(date.getUTCMonth() + 1) + '-' + pad2(date.getUTCDate()) +
+          'T' + pad2(date.getUTCHours()) + ':' + pad2(date.getUTCMinutes()) + ':' + pad2(date.getUTCSeconds());
+      }
+
+      function formatDuration(seconds) {
+        if (typeof seconds !== 'number' || !isFinite(seconds) || seconds < 0) {
+          return '—';
+        }
+        var totalMinutes = Math.floor(seconds / 60);
+        var hours = Math.floor(totalMinutes / 60);
+        var minutes = totalMinutes % 60;
+        return hours + ':' + pad2(minutes);
+      }
+
+      // datetime-local gives a wall-clock string. Parse the fields ourselves and
+      // build the epoch with Date.UTC so the browser's own timezone never shifts it.
+      function parseLocalInput(raw) {
+        var match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(raw || '');
+        if (!match) {
+          return null;
+        }
+        var year = Number(match[1]);
+        var month = Number(match[2]);
+        var day = Number(match[3]);
+        var hour = Number(match[4]);
+        var minute = Number(match[5]);
+        var second = match[6] ? Number(match[6]) : 0;
+        if (year < 2024 || year > 2099 || month < 1 || month > 12 || day < 1 || day > 31 ||
+            hour > 23 || minute > 59 || second > 59) {
+          return null;
+        }
+        var ms = Date.UTC(year, month - 1, day, hour, minute, second);
+        var check = new Date(ms);
+        if (check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 ||
+            check.getUTCDate() !== day || check.getUTCHours() !== hour ||
+            check.getUTCMinutes() !== minute || check.getUTCSeconds() !== second) {
+          return null;
+        }
+        var epoch = Math.floor(ms / 1000);
+        if (epoch < 1 || epoch > 4294967295) {
+          return null;
+        }
+        return epoch;
+      }
+
+      // Initial/fallback fill uses Europe/Istanbul (UTC+3, year-round in this project).
+      function istanbulNowInput() {
+        var now = new Date();
+        try {
+          var formatter = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Istanbul',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hourCycle: 'h23'
+          });
+          if (typeof formatter.formatToParts === 'function') {
+            var parts = {};
+            formatter.formatToParts(now).forEach(function (part) {
+              if (part.type !== 'literal') {
+                parts[part.type] = part.value;
+              }
+            });
+            if (parts.year && parts.month && parts.day && parts.hour && parts.minute && parts.second) {
+              var hour = parts.hour === '24' ? '00' : parts.hour;
+              return parts.year + '-' + parts.month + '-' + parts.day + 'T' + hour + ':' + parts.minute + ':' + parts.second;
+            }
+          }
+        } catch (err) {
+          // Older engines: use fixed UTC+3 arithmetic below.
+        }
+        var shifted = new Date(now.getTime() + 3 * 3600 * 1000);
+        return shifted.getUTCFullYear() + '-' + pad2(shifted.getUTCMonth() + 1) + '-' + pad2(shifted.getUTCDate()) +
+          'T' + pad2(shifted.getUTCHours()) + ':' + pad2(shifted.getUTCMinutes()) + ':' + pad2(shifted.getUTCSeconds());
+      }
+
+      function utf8Length(text) {
+        try {
+          if (typeof TextEncoder === 'function') {
+            return new TextEncoder().encode(text).length;
+          }
+          return unescape(encodeURIComponent(text)).length;
+        } catch (err) {
+          return text.length;
+        }
+      }
+
+      function normalizeUid(raw) {
+        var trimmed = String(raw == null ? '' : raw).trim().toUpperCase();
+        if (!/^(?:[0-9A-F]{8}|[0-9A-F]{14}|[0-9A-F]{20})$/.test(trimmed)) {
+          return '';
+        }
+        return trimmed;
+      }
+
+      function validateName(value) {
+        var name = String(value == null ? '' : value).trim();
+        if (!name) {
+          return 'Ad soyad boş olamaz.';
+        }
+        if (/[\u0000-\u001F\u007F]/.test(name)) {
+          return 'Ad soyad kontrol karakteri içeremez.';
+        }
+        var bytes = utf8Length(name);
+        if (bytes > 48) {
+          return 'Ad soyad çok uzun; en fazla 48 karakter girebilirsiniz.';
+        }
+        return '';
+      }
+
+      function setResult(element, text, kind) {
+        element.textContent = text || '';
+        if (kind) {
+          element.setAttribute('data-kind', kind);
+        } else {
+          element.removeAttribute('data-kind');
+        }
+      }
+
+      function clearResult(element) {
+        setResult(element, '', '');
+      }
+
+      function updatePostAvailability() {
+        var fresh = state.lastSuccessAt > 0 && state.failures === 0 &&
+          Date.now() - state.lastSuccessAt <= STALE_MS;
+        var ready = Boolean(state.csrf) && !state.posting && fresh;
+        ui.employeeSubmit.disabled = !ready || !state.status || state.status.storage_ok !== true;
+        ui.timeSubmit.disabled = !ready;
+        var reason = state.posting ? 'İşlem sürüyor.' :
+          (!fresh ? 'Bağlantı bilgisi eski; durumu yenileyin.' : 'Oturum doğrulanamadı; sayfayı yenileyin.');
+        ui.employeeSubmit.title = ready ? '' : reason;
+        ui.timeSubmit.title = ready ? '' : reason;
+      }
+
+      function setButtonBusy(button, busy, busyText) {
+        if (busy) {
+          if (!button.getAttribute('data-label')) {
+            button.setAttribute('data-label', button.textContent);
+          }
+          button.textContent = busyText || 'İşleniyor…';
+          button.disabled = true;
+          button.setAttribute('aria-busy', 'true');
+        } else {
+          var label = button.getAttribute('data-label');
+          if (label) {
+            button.textContent = label;
+          }
+          button.removeAttribute('aria-busy');
+          updatePostAvailability();
+        }
+      }
+
+      function monotonicNow() {
+        if (window.performance && typeof window.performance.now === 'function') {
+          return window.performance.now();
+        }
+        return Date.now();
+      }
+
+      function currentDeviceEpoch() {
+        if (!state.clockOk || state.deviceEpochBase === null) {
+          return null;
+        }
+        return state.deviceEpochBase + Math.floor((monotonicNow() - state.devicePerfBase) / 1000);
+      }
+
+      function showBanner(text, detail) {
+        ui.connectionText.textContent = text;
+        ui.connectionDetail.textContent = detail || 'Gösterilen bilgiler son başarılı yanıttan ve eski olabilir; işlem yapmayın.';
+        ui.banner.hidden = false;
+      }
+
+      function hideBanner() {
+        ui.banner.hidden = true;
+      }
+
+      function updateLastSync() {
+        if (!state.lastSuccessAt) {
+          ui.lastSync.textContent = '—';
+          return;
+        }
+        var seconds = Math.max(0, Math.floor((Date.now() - state.lastSuccessAt) / 1000));
+        var text = seconds < 2 ? 'az önce' : seconds + ' sn önce';
+        if (state.failures > 0) {
+          text += ' · son deneme başarısız';
+        }
+        ui.lastSync.textContent = text;
+        if (state.failures === 0 && Date.now() - state.lastSuccessAt > STALE_MS) {
+          showBanner('Cihaz durumu gecikiyor.', 'Son başarılı yanıt ' + seconds + ' saniye önce alındı. Bilgiler eski olabilir; işlem öncesi durumu yenileyin.');
+        }
+      }
+
+      function renderClock() {
+        var epoch = currentDeviceEpoch();
+        if (epoch !== null) {
+          ui.deviceClock.textContent = formatDeviceEpoch(epoch);
+          ui.deviceClock.dateTime = epochToLocalInputValue(epoch);
+          ui.clockHint.textContent = 'Türkiye saati';
+        } else {
+          ui.deviceClock.textContent = '—';
+          ui.deviceClock.removeAttribute('datetime');
+          ui.clockHint.textContent = state.status ? 'Saat ayarlanmamış' : 'Durum bekleniyor';
+        }
+        updateLastSync();
+        updatePostAvailability();
+      }
+
+      function setChip(element, text, chipState) {
+        var label = element.querySelector('.chip-label');
+        if (label) {
+          label.textContent = text;
+        }
+        element.setAttribute('data-state', chipState);
+      }
+
+      function normalizeEmployee(raw) {
+        if (!raw || typeof raw !== 'object') {
+          return null;
+        }
+        var uid = typeof raw.uid === 'string' ? raw.uid.toUpperCase() : '';
+        if (!/^(?:[0-9A-F]{8}|[0-9A-F]{14}|[0-9A-F]{20})$/.test(uid)) {
+          return null;
+        }
+        var total = (typeof raw.total_seconds === 'number' && isFinite(raw.total_seconds) && raw.total_seconds >= 0)
+          ? raw.total_seconds : 0;
+        var live = (typeof raw.live_seconds === 'number' && isFinite(raw.live_seconds) && raw.live_seconds >= 0)
+          ? raw.live_seconds : 0;
+        var entry = (typeof raw.entry === 'number' && isFinite(raw.entry) && raw.entry > 0) ? raw.entry : 0;
+        return {
+          uid: uid,
+          name: typeof raw.name === 'string' && raw.name ? raw.name : '—',
+          inside: raw.inside === true,
+          entry: entry,
+          total: total,
+          live: live
+        };
+      }
+
+      function makeCell(text, className) {
+        var cell = document.createElement('td');
+        cell.textContent = text;
+        if (className) {
+          cell.className = className;
+        }
+        return cell;
+      }
+
+      function renderEmployees(employees) {
+        var rows = ui.employeeRows;
+        rows.textContent = '';
+        if (!employees.length) {
+          var emptyRow = document.createElement('tr');
+          emptyRow.className = 'empty-row';
+          var emptyCell = document.createElement('td');
+          emptyCell.colSpan = 5;
+          emptyCell.textContent = 'Henüz personel yok. Kartı okutup ad ekleyin.';
+          emptyRow.appendChild(emptyCell);
+          rows.appendChild(emptyRow);
+          ui.employeeCount.textContent = '0 / ' + MAX_EMPLOYEES + ' personel · kayıt yok';
+          return;
+        }
+
+        var fragment = document.createDocumentFragment();
+        var insideCount = 0;
+        employees.forEach(function (employee) {
+          if (employee.inside) {
+            insideCount += 1;
+          }
+          var row = document.createElement('tr');
+          row.appendChild(makeCell(employee.name));
+
+          var statusCell = document.createElement('td');
+          var badge = document.createElement('span');
+          badge.className = 'badge ' + (employee.inside ? 'badge-inside' : 'badge-outside');
+          badge.textContent = employee.inside ? 'İçeride' : 'Dışarıda';
+          statusCell.appendChild(badge);
+          row.appendChild(statusCell);
+
+          row.appendChild(makeCell(employee.inside ? formatDeviceEpoch(employee.entry) : '—'));
+          row.appendChild(makeCell(formatDuration(employee.total), 'right'));
+
+          var liveText = employee.inside ? formatDuration(employee.live) : '—';
+          row.appendChild(makeCell(liveText, 'right'));
+          fragment.appendChild(row);
+        });
+        rows.appendChild(fragment);
+        ui.employeeCount.textContent = employees.length + ' / ' + MAX_EMPLOYEES + ' personel · ' + insideCount + ' açık oturum';
+      }
+
+      function renderMetrics(employees) {
+        var insideCount = 0;
+        var totalSeconds = 0;
+        var liveSeconds = 0;
+        employees.forEach(function (employee) {
+          totalSeconds += employee.total;
+          if (employee.inside) {
+            insideCount += 1;
+            liveSeconds += employee.live;
+          }
+        });
+        ui.metricEmployees.textContent = String(employees.length);
+        ui.metricInside.textContent = String(insideCount);
+        ui.metricTotal.textContent = formatDuration(totalSeconds);
+        ui.metricLive.textContent = formatDuration(liveSeconds);
+      }
+
+      function lastUidValue() {
+        var raw = state.status && typeof state.status.last_uid === 'string' ? state.status.last_uid : '';
+        return normalizeUid(raw);
+      }
+
+      function updateFillUidButton() {
+        ui.fillUidButton.disabled = !lastUidValue();
+      }
+
+      function applyStatus(data) {
+        if (!data || typeof data !== 'object') {
+          throw new Error('Cihaz geçersiz durum yanıtı döndü.');
+        }
+        state.status = data;
+        state.csrf = typeof data.csrf === 'string' ? data.csrf : '';
+
+        state.clockOk = data.clock_ok === true && typeof data.now === 'number' && isFinite(data.now) && data.now > 0;
+        state.deviceEpochBase = state.clockOk ? data.now : null;
+        state.devicePerfBase = monotonicNow();
+
+        var storageOk = data.storage_ok === true;
+        var rfidOk = data.rfid_ok === true;
+        var oledOk = data.oled_ok === true;
+        var sdEnabled = data.sd_enabled === true;
+        var sdOk = data.sd_ok === true;
+
+        setChip(ui.chipStorage, 'Kayıt alanı: ' + (storageOk ? 'tamam' : 'hata'), storageOk ? 'ok' : 'bad');
+        setChip(ui.chipClock, 'Saat: ' + (state.clockOk ? 'tamam' : 'hata'), state.clockOk ? 'ok' : 'bad');
+        setChip(ui.chipRfid, 'Kart okuyucu: ' + (rfidOk ? 'hazır' : 'hata'), rfidOk ? 'ok' : 'bad');
+        setChip(ui.chipOled, 'Ekran: ' + (oledOk ? 'tamam' : 'hata'), oledOk ? 'ok' : 'bad');
+        if (sdEnabled) {
+          setChip(ui.chipSd, 'SD yedek: ' + (sdOk ? 'tamam' : 'hata'), sdOk ? 'ok' : 'bad');
+        } else {
+          setChip(ui.chipSd, 'SD yedek: kapalı (isteğe bağlı)', 'off');
+        }
+
+        var coreOk = state.clockOk && storageOk && rfidOk && oledOk;
+        var problems = [];
+        if (!state.clockOk) {
+          problems.push('Cihaz saati ayarlanmamış; önce saat ayarını yapın.');
+        }
+        if (!storageOk) {
+          problems.push('Kayıt alanına yazılamıyor; yeni kayıtlar kaybolabilir.');
+        }
+        if (!rfidOk) {
+          problems.push('Kart okuyucu yanıt vermiyor; bağlantısını kontrol edin.');
+        }
+        if (!oledOk) {
+          problems.push('Ekran yanıt vermiyor; bağlantısını kontrol edin.');
+        }
+        if (sdEnabled && !sdOk) {
+          problems.push('SD yedek kartı okunamıyor; kayıtlar cihazın kendi kayıt alanında tutulur.');
+        }
+        if (problems.length) {
+          ui.healthNote.textContent = 'Dikkat: ' + problems.join(' ');
+          ui.healthNote.setAttribute('data-state', coreOk ? 'warn' : 'bad');
+        } else {
+          ui.healthNote.textContent = 'Temel durum bildirimleri sağlıklı görünüyor.';
+          ui.healthNote.setAttribute('data-state', 'ok');
+        }
+
+        var employees = [];
+        if (Array.isArray(data.employees)) {
+          data.employees.forEach(function (raw) {
+            var employee = normalizeEmployee(raw);
+            if (employee) {
+              employees.push(employee);
+            }
+          });
+        }
+        renderEmployees(employees);
+        renderMetrics(employees);
+        updateFillUidButton();
+        ui.tableUpdated.textContent = state.clockOk
+          ? 'Cihaz saati: ' + formatDeviceEpoch(data.now)
+          : 'Cihaz saati geçersiz';
+
+        renderClock();
+        updatePostAvailability();
+
+        if (state.firstStatus) {
+          if (state.clockOk && !state.timeTouched) {
+            ui.timeInput.value = epochToLocalInputValue(data.now);
+          }
+          state.firstStatus = false;
+        }
+      }
+
+      function loadStatus() {
+        if (state.inFlight) {
+          return state.inFlight;
+        }
+        var controller = null;
+        var timer = null;
+        if (typeof AbortController === 'function') {
+          controller = new AbortController();
+          timer = setTimeout(function () { controller.abort(); }, FETCH_TIMEOUT_MS);
+        }
+        var options = {
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { 'Accept': 'application/json' }
+        };
+        if (controller) {
+          options.signal = controller.signal;
+        }
+
+        var promise = (async function () {
+          try {
+            var response = await fetch('/api/status', options);
+            if (!response.ok) {
+              var httpError = new Error(response.status === 401
+                ? 'Kimlik doğrulama gerekli veya başarısız (HTTP 401).'
+                : 'Durum alınamadı (HTTP ' + response.status + ').');
+              httpError.status = response.status;
+              throw httpError;
+            }
+            var data = await response.json();
+            applyStatus(data);
+            state.failures = 0;
+            state.lastSuccessAt = Date.now();
+            hideBanner();
+            updatePostAvailability();
+          } catch (error) {
+            state.failures += 1;
+            var message;
+            if (error && error.name === 'AbortError') {
+              message = 'Cihaz zamanında yanıt vermedi.';
+            } else if (error && error.message) {
+              message = error.message;
+            } else {
+              message = 'Bağlantı hatası.';
+            }
+            showBanner('Cihaz durumuna ulaşılamadı.', message +
+              ' Gösterilen bilgiler son başarılı yanıttan ve eski olabilir; işlem yapmadan önce durumu yenileyin.');
+          } finally {
+            if (timer) {
+              clearTimeout(timer);
+            }
+            state.inFlight = null;
+            updatePostAvailability();
+          }
+        })();
+        state.inFlight = promise;
+        return promise;
+      }
+
+      async function postJson(path, payload) {
+        var controller = null;
+        var timer = null;
+        if (typeof AbortController === 'function') {
+          controller = new AbortController();
+          timer = setTimeout(function () { controller.abort(); }, 8000);
+        }
+        var options = {
+          method: 'POST',
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-Token': state.csrf
+          },
+          body: JSON.stringify(payload)
+        };
+        if (controller) {
+          options.signal = controller.signal;
+        }
+        try {
+          var response = await fetch(path, options);
+          var text = await response.text();
+          var data = null;
+          try {
+            data = text ? JSON.parse(text) : null;
+          } catch (parseError) {
+            data = null;
+          }
+          if (!response.ok) {
+            var message = data && typeof data.message === 'string' && data.message
+              ? data.message
+              : 'İstek reddedildi (HTTP ' + response.status + ').';
+            var httpError = new Error(message);
+            httpError.status = response.status;
+            httpError.data = data;
+            throw httpError;
+          }
+          if (!data || typeof data !== 'object') {
+            throw new Error('Cihaz geçersiz yanıt döndü.');
+          }
+          return data;
+        } finally {
+          if (timer) {
+            clearTimeout(timer);
+          }
+        }
+      }
+
+      function handlePostError(error, resultElement) {
+        var message = (error && error.name === 'AbortError')
+          ? 'Cihaz zamanında yanıt vermedi; istek otomatik tekrarlanmadı.'
+          : (error && error.message ? error.message : 'Bağlantı hatası; istek otomatik tekrarlanmadı.');
+        if ((error && error.status === 401) || (error && error.status === 403) || /csrf/i.test(message)) {
+          if (error && error.status !== 401) {
+            state.csrf = '';
+          }
+          if (error && error.status === 401) {
+            message = 'Kimlik doğrulama başarısız (HTTP 401). Tarayıcı oturumunu/şifreyi kontrol edin.';
+          } else {
+            message = 'Oturum doğrulanamadı; sayfayı yenileyin. İstek otomatik tekrarlanmadı.';
+          }
+          loadStatus();
+        }
+        setResult(resultElement, message, 'error');
+        updatePostAvailability();
+      }
+
+      ui.themeToggle.addEventListener('click', function () {
+        var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try {
+          localStorage.setItem('pdks-theme', next);
+        } catch (storageError) {
+          // Theme still applies for this page view.
+        }
+        updateThemeButton();
+      });
+
+      function effectiveTheme() {
+        var explicit = document.documentElement.getAttribute('data-theme');
+        if (explicit === 'light' || explicit === 'dark') {
+          return explicit;
+        }
+        return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      }
+
+      function updateThemeButton() {
+        var dark = effectiveTheme() === 'dark';
+        ui.themeToggle.textContent = dark ? 'Açık tema' : 'Koyu tema';
+        ui.themeToggle.setAttribute('aria-label', dark ? 'Açık temaya geç' : 'Koyu temaya geç');
+        ui.themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+      }
+
+      ui.refreshButton.addEventListener('click', async function () {
+        ui.refreshButton.disabled = true;
+        try {
+          await loadStatus();
+        } finally {
+          ui.refreshButton.disabled = false;
+        }
+      });
+
+      ui.fillUidButton.addEventListener('click', function () {
+        var uid = lastUidValue();
+        if (!uid) {
+          return;
+        }
+        ui.uidInput.value = uid;
+        setResult(ui.employeeResult, 'Kart hazır; ad girip personeli kaydedin.', 'ok');
+        if (!ui.nameInput.value.trim()) {
+          ui.nameInput.focus();
+        } else {
+          ui.employeeSubmit.focus();
+        }
+      });
+
+      ui.nameInput.addEventListener('input', function () {
+        ui.nameInput.removeAttribute('aria-invalid');
+      });
+      ui.timeInput.addEventListener('input', function () {
+        state.timeTouched = true;
+      });
+
+      ui.fillNowButton.addEventListener('click', function () {
+        ui.timeInput.value = istanbulNowInput();
+        setResult(ui.timeResult, 'Alan telefon/bilgisayar saatinden Türkiye saatine çevrildi; kaydetmeden önce doğruluğunu kontrol edin.', 'warn');
+        state.timeTouched = true;
+      });
+
+      ui.employeeForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        if (state.posting) {
+          return;
+        }
+        clearResult(ui.employeeResult);
+
+        var uid = normalizeUid(ui.uidInput.value);
+        if (!uid) {
+          setResult(ui.employeeResult, 'Kart okunamadı; kartı okutup “Son okutulan kartı kullan” seçin.', 'error');
+          if (!ui.fillUidButton.disabled) {
+            ui.fillUidButton.focus();
+          }
+          return;
+        }
+
+        var name = ui.nameInput.value.trim();
+        var nameError = validateName(name);
+        if (nameError) {
+          ui.nameInput.setAttribute('aria-invalid', 'true');
+          setResult(ui.employeeResult, nameError, 'error');
+          ui.nameInput.focus();
+          return;
+        }
+        ui.nameInput.removeAttribute('aria-invalid');
+
+        if (!state.csrf) {
+          setResult(ui.employeeResult, 'Oturum doğrulanamadı; sayfayı yenileyin.', 'error');
+          loadStatus();
+          return;
+        }
+
+        state.posting = true;
+        setButtonBusy(ui.employeeSubmit, true, 'Kaydediliyor…');
+        updatePostAvailability();
+        try {
+          var data = await postJson('/api/employee', { uid: uid, name: name });
+          if (data.ok === true) {
+            setResult(ui.employeeResult,
+              typeof data.message === 'string' && data.message ? data.message : 'Personel kaydedildi.', 'ok');
+            ui.uidInput.value = '';
+            ui.nameInput.value = '';
+            ui.nameInput.focus();
+            await loadStatus();
+          } else {
+            setResult(ui.employeeResult,
+              typeof data.message === 'string' && data.message ? data.message : 'Kayıt başarısız.', 'error');
+          }
+        } catch (error) {
+          handlePostError(error, ui.employeeResult);
+        } finally {
+          state.posting = false;
+          setButtonBusy(ui.employeeSubmit, false);
+          updatePostAvailability();
+        }
+      });
+
+      ui.timeForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        if (state.posting) {
+          return;
+        }
+        clearResult(ui.timeResult);
+
+        var epoch = parseLocalInput(ui.timeInput.value);
+        if (epoch === null) {
+          setResult(ui.timeResult, 'Geçerli bir tarih ve saat girin (yıl 2024–2099).', 'error');
+          ui.timeInput.focus();
+          return;
+        }
+        if (!state.csrf) {
+          setResult(ui.timeResult, 'Oturum doğrulanamadı; sayfayı yenileyin.', 'error');
+          loadStatus();
+          return;
+        }
+
+        var readable = formatDeviceEpoch(epoch);
+        var confirmed = window.confirm(
+          'Cihaz saati ' + readable + ' (Türkiye yerel) olarak ayarlanacak.\n\n' +
+          'Açık oturum varken veya yeni saat son kayıtlı olaydan önceyse cihaz bu değişikliği reddeder. ' +
+          'Bu işlem geri alınamaz. Devam edilsin mi?'
+        );
+        if (!confirmed) {
+          setResult(ui.timeResult, 'Saat değişikliği iptal edildi.', 'warn');
+          return;
+        }
+
+        state.posting = true;
+        setButtonBusy(ui.timeSubmit, true, 'Ayarlanıyor…');
+        updatePostAvailability();
+        try {
+          var data = await postJson('/api/time', { epoch: epoch });
+          if (data.ok === true) {
+            setResult(ui.timeResult,
+              typeof data.message === 'string' && data.message ? data.message : 'Cihaz saati ayarlandı.', 'ok');
+            state.timeTouched = false;
+            await loadStatus();
+          } else {
+            setResult(ui.timeResult,
+              typeof data.message === 'string' && data.message ? data.message : 'Saat ayarlanamadı.', 'error');
+          }
+        } catch (error) {
+          handlePostError(error, ui.timeResult);
+        } finally {
+          state.posting = false;
+          setButtonBusy(ui.timeSubmit, false);
+          updatePostAvailability();
+        }
+      });
+
+      async function pollLoop() {
+        if (!document.hidden) {
+          await loadStatus();
+        }
+        state.timer = setTimeout(pollLoop, POLL_MS);
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) {
+          loadStatus();
+        }
+      });
+
+      try {
+        var savedTheme = localStorage.getItem('pdks-theme');
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+      } catch (themeError) {
+        // Ignore unavailable localStorage.
+      }
+      updateThemeButton();
+      if (window.matchMedia) {
+        var themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        if (themeQuery.addEventListener) {
+          themeQuery.addEventListener('change', updateThemeButton);
+        } else if (themeQuery.addListener) {
+          themeQuery.addListener(updateThemeButton);
+        }
+      }
+
+      updatePostAvailability();
+      ui.timeInput.value = istanbulNowInput();
+      renderClock();
+      setInterval(renderClock, 1000);
+
+      if (typeof fetch !== 'function') {
+        showBanner('Tarayıcı desteklenmiyor.', 'Bu panel fetch API gerektirir; güncel bir tarayıcı kullanın.');
+      } else {
+        pollLoop();
+      }
+    })();
+  </script>
+</body>
+</html>
+)PDKS_PANEL";

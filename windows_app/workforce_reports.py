@@ -121,6 +121,7 @@ class ReportsPanel(ttk.Frame):
         frame.pack(fill='both', expand=True)
         tree = ttk.Treeview(frame, columns=[key for key, _ in columns], show='headings',
                             selectmode='browse', height=6)
+        tree.configure(displaycolumns=[key for key, _ in columns if key != 'uid'])
         for key, label in columns:
             tree.heading(key, text=label)
             tree.column(key, width=cls._width(key), minwidth=60, anchor='w')
@@ -312,8 +313,11 @@ class ReportsPanel(ttk.Frame):
         for row in rows:
             uid_value = row.get('uid')
             if isinstance(uid_value, str) and uid_value:
-                name = (row.get('name') or '').strip()
-                people[(name + ' · ' + uid_value) if name else uid_value] = uid_value
+                base = (row.get('name') or '').strip() or 'Personel'
+                label, number = base, 2
+                while label in people and people[label] != uid_value:
+                    label, number = f'{base} ({number})', number + 1
+                people[label] = uid_value
             depts.add(row.get('department') or '')
         self._people = people
         if selected_uid is not None:
@@ -372,7 +376,6 @@ class ReportsPanel(ttk.Frame):
         source = report.get('source') or self.source or '—'
         self.meta_var.set('Kaynak: ' + str(source) + ' · yalnızca yerel arşiv (canlı cihaz verisi değil)')
         self.info_var.set('Anlık görüntü: ' + str(report.get('synced_at') or '—') +
-                          ' · politika #: ' + str(report.get('config_hash') or '—') +
                           ' · aralık: ' + str(report.get('start') or '—') + ' → ' +
                           str(report.get('end') or '—'))
         warnings = report.get('warnings') or []

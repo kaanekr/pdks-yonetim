@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -78,7 +79,9 @@ def main():
     assert "if (cfg::SD_SOFTSPI) pinMode(cfg::PIN_SD_SOFT_MISO, INPUT);" in setup
     for cpp in (ROOT / "src").glob("*.cpp"):
         assert not re.search(r"\bSerial\s*\.", cpp.read_text(encoding="utf-8")), f"Dogrudan UART erisimi: {cpp}"
-    print("TX integration: UART release order, SD input, protected sound routes OK")
+    subprocess.run([sys.executable, "-B", str(ROOT / "tools/embed_panel.py"), "--check"],
+                   check=True, cwd=ROOT)
+    print("TX integration: UART release order, SD input, protected sound routes, embedded panel OK")
 
 
 if __name__ == "__main__":

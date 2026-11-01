@@ -147,7 +147,7 @@ class RefreshSelectionTest(unittest.TestCase):
 
     def test_report_person_filter_keeps_uid_after_employee_rename(self):
         panel = self.prepare_report()
-        label = next(value for value in panel.person_combo['values'] if FIRST in value)
+        label = next(value for value in panel.person_combo['values'] if value != ALL)
         panel.person_var.set(label)
         panel.refresh_report()
         self.root.update()
@@ -161,7 +161,6 @@ class RefreshSelectionTest(unittest.TestCase):
         panel.refresh_report()
         self.root.update()
         self.assertNotEqual(panel.person_var.get(), ALL)
-        self.assertIn(FIRST, panel.person_var.get())
         shown = panel._trees['daily'].get_children()
         self.assertTrue(shown)
         self.assertTrue(all(panel._trees['daily'].item(iid, 'values')[2] == FIRST for iid in shown))
@@ -195,8 +194,7 @@ class RefreshSelectionTest(unittest.TestCase):
         self.root.update()
         self.assertEqual(self.app.manual_uids, [SECOND, FIRST])
         chosen = self.app.manual_choice.get()
-        self.assertIn(SECOND, chosen)
-        self.assertNotIn(FIRST, chosen)
+        self.assertEqual(self.app.manual_uids[self.app.manual_choice.current()], SECOND)
         self.assertIn('Mehmet Yeni', chosen)
 
     def test_removed_selected_rows_clear_selection_instead_of_switching(self):

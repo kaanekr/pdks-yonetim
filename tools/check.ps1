@@ -13,6 +13,8 @@ if (-not (Test-Path $python)) { $python = 'python' }
 Push-Location $root
 try {
     if ($Target -in @('Core', 'All')) {
+        & $python -B 'tools/embed_panel.py'
+        if ($LASTEXITCODE -ne 0) { throw 'Gomulu web paneli guncellenemedi.' }
         & $python 'tools/test_core.py'
         if ($LASTEXITCODE -ne 0) { throw 'Mesai cekirdegi testleri basarisiz.' }
         & $python 'tools/test_card_gate.py'

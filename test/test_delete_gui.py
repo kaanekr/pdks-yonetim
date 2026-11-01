@@ -68,7 +68,7 @@ class DeleteGuiTest(unittest.TestCase):
         self.select_event(sequence)
         with patch('windows_app.gui.messagebox.askyesno', return_value=True) as confirm, \
                 patch('windows_app.gui.simpledialog.askstring',
-                      return_value='SIL %d' % sequence if phrase is None else phrase), \
+                      return_value='KALICI SIL' if phrase is None else phrase), \
                 patch.object(self.app, 'job', new=self.sync_job), \
                 patch('windows_app.gui.messagebox.showinfo') as info:
             self.app.delete_session()
@@ -79,7 +79,7 @@ class DeleteGuiTest(unittest.TestCase):
         self.select_person(uid)
         with patch('windows_app.gui.messagebox.askyesno', return_value=True) as confirm, \
                 patch('windows_app.gui.simpledialog.askstring',
-                      return_value='SIL %s' % uid if phrase is None else phrase), \
+                      return_value='KALICI SIL' if phrase is None else phrase), \
                 patch.object(self.app, 'job', new=self.sync_job), \
                 patch('windows_app.gui.messagebox.showinfo') as info:
             self.app.delete_person()
@@ -221,7 +221,7 @@ class DeleteGuiTest(unittest.TestCase):
     def test_recovery_row_and_open_session_are_rejected_without_a_job(self):
         self.prepare()
         with patch('windows_app.gui.messagebox.askyesno', return_value=True), \
-                patch('windows_app.gui.simpledialog.askstring', return_value='SIL 6'), \
+                patch('windows_app.gui.simpledialog.askstring', return_value='KALICI SIL'), \
                 patch('windows_app.gui.messagebox.showerror') as error, \
                 patch.object(self.app.client, 'delete_session') as post, \
                 patch.object(self.app, 'job') as job:
@@ -242,7 +242,7 @@ class DeleteGuiTest(unittest.TestCase):
         self.assertEqual((revision, sequence), (1, 4))
         # a sequence number that no longer exists after the approved resequencing
         with patch('windows_app.gui.messagebox.askyesno', return_value=True), \
-                patch('windows_app.gui.simpledialog.askstring', return_value='SIL 5'), \
+                patch('windows_app.gui.simpledialog.askstring', return_value='KALICI SIL'), \
                 patch('windows_app.gui.messagebox.showerror') as error, \
                 patch.object(self.app.client, 'delete_session') as post, \
                 patch.object(self.app, 'job') as job:
@@ -253,7 +253,7 @@ class DeleteGuiTest(unittest.TestCase):
         # the GUI form still holds the pre-delete revision: the archive refuses the intent
         self.app.state['journal_revision'] = 0
         with patch('windows_app.gui.messagebox.askyesno', return_value=True), \
-                patch('windows_app.gui.simpledialog.askstring', return_value='SIL 1'), \
+                patch('windows_app.gui.simpledialog.askstring', return_value='KALICI SIL'), \
                 patch('windows_app.gui.messagebox.showerror') as error, \
                 patch.object(self.app.client, 'delete_session') as post, \
                 patch.object(self.app, 'job') as job:
@@ -318,7 +318,7 @@ class DeleteGuiTest(unittest.TestCase):
                 work()
 
         with patch('windows_app.gui.messagebox.askyesno', return_value=True), \
-                patch('windows_app.gui.simpledialog.askstring', return_value='SIL 1'), \
+                patch('windows_app.gui.simpledialog.askstring', return_value='KALICI SIL'), \
                 patch.object(app1, '_read_snapshot',
                              side_effect=DeviceError('Zaman aşımı; sonuç belirsiz.')), \
                 patch.object(app1, 'job', new=uncertain), \
@@ -370,7 +370,7 @@ class DeleteGuiTest(unittest.TestCase):
         with patch.object(self.app.client, 'delete_session',
                           side_effect=DeviceError('Zaman aşımı; sonuç belirsiz.')) as post, \
                 patch('windows_app.gui.messagebox.askyesno', return_value=True), \
-                patch('windows_app.gui.simpledialog.askstring', return_value='SIL 1'), \
+                patch('windows_app.gui.simpledialog.askstring', return_value='KALICI SIL'), \
                 patch('windows_app.gui.messagebox.showerror') as error, \
                 patch('windows_app.gui.messagebox.showinfo') as info:
             self.select_event(1)

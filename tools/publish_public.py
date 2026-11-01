@@ -105,7 +105,6 @@ def publish_release(assets, commit):
        '--target', commit, '--draft', '--title', 'PDKS Yönetim '+tag,
        '--notes', manifest['notes']+'\n\nİlk OTA kurulumu: bir kez özel USB gerekir. '
        'Public firmware boş cihazın ilk kurulum imajı değildir. '
-       'Gerçek cihaz OTA kabul testi henüz yapılmadı. '
        'EXE uygulama içi imzayla doğrulanır; Authenticode imzası değildir.')
     gh('release', 'edit', tag, '--repo', REPOSITORY, '--draft=false', '--latest')
     print('RELEASE:', 'https://github.com/'+REPOSITORY+'/releases/tag/'+tag)

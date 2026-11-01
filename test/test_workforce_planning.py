@@ -257,7 +257,7 @@ class PlanningTest(unittest.TestCase):
         config['shifts'].append(copy.deepcopy(SHIFT))
         config['people']['AABBCCDD'] = {'department': 'Depo', 'employee_no': '7'}
         panel, store = self.prepared(config)
-        self.assertIn('AABBCCDD', panel.meta_person_combo['values'])
+        self.assertIn('AABBCCDD', panel._person_names)
         exposed = panel.current_config()
         exposed['shifts'].clear()
         self.assertEqual(len(panel.current_config()['shifts']), 1)

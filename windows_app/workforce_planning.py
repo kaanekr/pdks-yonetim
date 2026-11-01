@@ -29,6 +29,7 @@ class PlanningPanel(ttk.Frame):
         self._config = default_config()
         self._shift_choices = {}
         self._person_names = {}
+        self._person_labels = {}
         self._editing_shift_id = None
         self._build()
         self.set_source(None)
@@ -244,7 +245,7 @@ class PlanningPanel(ttk.Frame):
             messagebox.showerror('İzin', 'İzin türü Yıllık izin, Rapor, Ücretsiz izin veya Diğer '
                                  'olmalı.', parent=self)
             return False
-        item = {'uid': self.leave_person.get().strip(), 'start': self.leave_start.get().strip(),
+        item = {'uid': self._person_uid(self.leave_person.get()), 'start': self.leave_start.get().strip(),
                 'end': self.leave_end.get().strip(), 'kind': kind}
         candidate = copy.deepcopy(self._config)
         candidate['leaves'].append(item)
@@ -327,7 +328,7 @@ class PlanningPanel(ttk.Frame):
     def save_person_metadata(self):
         if not self._guard():
             return False
-        person = self.meta_person.get().strip()
+        person = self._person_uid(self.meta_person.get())
         if not person:
             messagebox.showerror('Personel bilgisi', 'Personel seçin.', parent=self)
             return False
@@ -369,11 +370,10 @@ class PlanningPanel(ttk.Frame):
         data = self._validate_or_error(copy.deepcopy(self._config), 'Puantaj ayarları')
         if data is None:
             return False
-        digest = config_hash(data)[:12]
         if not messagebox.askyesno(
                 'Yerel politikayı kaydet',
                 f'{section} ayarları yerel olarak kaydedilecek.\n\n'
-                f'Raporlar yeni ayar özeti ({digest}…) ile yeniden hesaplanır; '
+                'Raporlar yeni ayarlarla yeniden hesaplanır; '
                 'eski ham kayıtlar değişmez. Onaylıyor musunuz?', parent=self):
             return False
         try:
@@ -388,7 +388,7 @@ class PlanningPanel(ttk.Frame):
             return False
         self._saved = copy.deepcopy(data)
         self._config = copy.deepcopy(data)
-        self.status_var.set(f'{section} kaydedildi • yeni özet {digest}…')
+        self.status_var.set(f'{section} kaydedildi.')
         self.refresh()
         if self.on_change:
             self.on_change()
@@ -445,7 +445,7 @@ class PlanningPanel(ttk.Frame):
         header.pack(fill='x')
         ttk.Label(header, text='Puantaj planlama (yalnız yerel)',
                   font=('Segoe UI', 12, 'bold')).pack(anchor='w')
-        self.source_var = tk.StringVar(value='Kaynak: seçilmedi')
+        self.source_var = tk.StringVar(value='Cihaz/arşiv: seçilmedi')
         ttk.Label(header, textvariable=self.source_var).pack(anchor='w')
         ttk.Label(header, text='Ekle/Güncelle taslağı değiştirir; Kaydet kalıcılaştırır. Cihaza yazılmaz.',
                   foreground='#304c64').pack(anchor='w')
@@ -575,19 +575,20 @@ class PlanningPanel(ttk.Frame):
 
     def _build_people(self):
         tab = self._scroll_tab('Personel Bilgisi')
-        ttk.Label(tab, text='Yalnız yerel puantaj metadata’sı: bölüm ve sicil. Cihaz personel '
-                  'kaydına yazılmaz; sabit UID kullanılır.', wraplength=940,
+        ttk.Label(tab, text='Yalnız yerel puantaj bilgisi: bölüm ve sicil. Cihaz personel '
+                  'kaydına yazılmaz.', wraplength=940,
                   foreground='#304c64').pack(anchor='w', pady=(0, 6))
         pane = ttk.Frame(tab)
         pane.pack(fill='both', expand=True)
         self.people_list = self._tree(pane, ('uid', 'name', 'department', 'no'),
                                       ('Sabit UID', 'Personel', 'Bölüm', 'Sicil'),
                                       (100, 170, 160, 110), 7)
+        self.people_list.configure(displaycolumns=('name', 'department', 'no'))
         form = ttk.Frame(pane, padding=(12, 0, 0, 0))
         form.pack(side='left', fill='y')
         self.meta_person_combo = self.assign_combo(form, 0, self.meta_person, (), 26,
                                                    readonly=True)
-        self._field(form, 0, 'Personel (sabit UID)', self.meta_person_combo)
+        self._field(form, 0, 'Personel', self.meta_person_combo)
         self._field(form, 1, 'Bölüm', self._entry(form, 1, self.meta_department, 26))
         self._field(form, 2, 'Sicil no', self._entry(form, 2, self.meta_employee_no, 20))
         buttons = ttk.Frame(form)
@@ -655,7 +656,7 @@ class PlanningPanel(ttk.Frame):
 
     # ----- form/state helpers --------------------------------------------
     def _apply_enabled(self):
-        self.source_var.set(f'Kaynak: {self.source}' if self.source else 'Kaynak: seçilmedi')
+        self.source_var.set(f'Cihaz/arşiv: {self.source}' if self.source else 'Cihaz/arşiv: seçilmedi')
         for index in range(self.notebook.index('end')):
             self.notebook.tab(index, state='normal' if self.enabled else 'disabled')
         if self.enabled and not self.notebook.select():
@@ -675,20 +676,35 @@ class PlanningPanel(ttk.Frame):
         for person in self._config['people']:
             names.setdefault(person, person)
         self._person_names = names
+        labels, label_uids = [], {}
+        for uid_value, name in names.items():
+            base = (name or uid_value).strip() or 'Personel'
+            label, number = base, 2
+            while label in label_uids and label_uids[label] != uid_value:
+                label, number = f'{base} ({number})', number + 1
+            labels.append(label)
+            label_uids[label] = uid_value
+        self._person_labels = label_uids
         departments = sorted({meta['department'] for meta in self._config['people'].values() if meta['department']})
         self.assign_department_combo.configure(values=departments)
         if self.assign_department.get() not in departments:
             self.assign_department.set(departments[0] if departments else '')
-        people = list(names)
+        people = labels
         self.assign_person_combo.configure(values=['*'] + people)
         self.leave_person_combo.configure(values=people)
         self.meta_person_combo.configure(values=people)
-        if self.assign_person.get() not in ['*'] + people:
-            self.assign_person.set('*')
-        if self.leave_person.get() not in people:
-            self.leave_person.set(people[0] if people else '')
-        if self.meta_person.get() not in people:
-            self.meta_person.set(people[0] if people else '')
+        def current_label(value):
+            if value == '*':
+                return '*'
+            if value in label_uids:
+                return value
+            return next((label for label, uid_value in label_uids.items() if uid_value == value), None)
+        for variable in (self.assign_person, self.leave_person, self.meta_person):
+            value = variable.get().strip()
+            mapped = current_label(value)
+            if mapped is None:
+                mapped = '*' if variable is self.assign_person else (people[0] if people else '')
+            variable.set(mapped)
         labels, mapping = [], {}
         for shift in self._config['shifts']:
             base = f"{shift['name']} ({shift['start']}–{shift['end']})"
@@ -768,7 +784,7 @@ class PlanningPanel(ttk.Frame):
             variable.set(str(shift[field]))
 
     def _load_person_meta(self):
-        person = self.meta_person.get().strip()
+        person = self._person_uid(self.meta_person.get())
         meta = self._config['people'].get(person, {})
         self.meta_department.set(meta.get('department', ''))
         self.meta_employee_no.set(meta.get('employee_no', ''))
@@ -796,7 +812,7 @@ class PlanningPanel(ttk.Frame):
         return payload
 
     def _assignment_payload(self):
-        person = self.assign_person.get().strip()
+        person = self._person_uid(self.assign_person.get())
         if not person:
             raise WorkforceError('Personel seçin (tüm personel için *).')
         shift_id = self._shift_id_for_choice()
@@ -822,6 +838,14 @@ class PlanningPanel(ttk.Frame):
     def _selected_index(tree):
         selection = tree.selection()
         return tree.index(selection[0]) if selection else None
+
+    def _person_uid(self, value):
+        value = str(value or '').strip()
+        if value == '*':
+            return '*'
+        if value in self._config.get('people', {}) or value in self._person_names:
+            return value
+        return self._person_labels.get(value, value)
 
     def _person_label(self, person):
         if person == '*':

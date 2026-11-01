@@ -250,7 +250,6 @@
     .health { margin: .55rem 0 0; font-size: .88rem; }
     .health[data-state="bad"] { color: var(--bad); }
     .health[data-state="warn"] { color: var(--warn); }
-    #deviceMessage { margin-top: .55rem; }
 
     .metrics {
       display: grid;
@@ -293,7 +292,7 @@
     .btn-primary { background: var(--accent); color: var(--accent-contrast); }
     .btn-secondary { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
     .btn:hover { filter: brightness(1.05); }
-    .btn:focus-visible, input:focus-visible, .csv-link:focus-visible {
+    .btn:focus-visible, input:focus-visible {
       outline: 3px solid var(--focus);
       outline-offset: 2px;
     }
@@ -328,10 +327,6 @@
     .result[data-kind="ok"] { color: var(--ok); }
     .result[data-kind="error"] { color: var(--bad); }
     .result[data-kind="warn"] { color: var(--warn); }
-
-    .uid-panel { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center; }
-    .uid-value { margin: 0; font-size: clamp(1.15rem, 3vw, 1.5rem); font-weight: 750; letter-spacing: .06em; word-break: break-all; }
-    .uid-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
 
     .panel-head { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; align-items: baseline; margin-bottom: .7rem; }
     .panel-head h2 { margin: 0; }
@@ -378,19 +373,6 @@
     .notice ul { margin: .4rem 0 0; padding-left: 1.2rem; }
     .notice li { margin: .3rem 0; }
     .notice strong { font-weight: 750; }
-    .download-row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
-    .csv-link {
-      display: inline-flex;
-      align-items: center;
-      min-height: 42px;
-      padding: .55rem .9rem;
-      border: 1px solid var(--border-strong);
-      border-radius: 9px;
-      background: var(--surface-2);
-      color: var(--text);
-      font-weight: 650;
-      text-decoration: none;
-    }
 
     .page-footer {
       width: min(1180px, 100%);
@@ -404,7 +386,6 @@
     @media (max-width: 620px) {
       .device-clock { text-align: left; }
       .top-actions { width: 100%; justify-content: space-between; }
-      .uid-panel { align-items: flex-start; }
       .form-grid { grid-template-columns: 1fr; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -445,29 +426,14 @@
         <button type="button" class="btn btn-secondary small-btn" id="refreshButton">Durumu yenile</button>
       </div>
       <div class="chips" id="statusChips">
-        <span class="chip" id="chipStorage" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Depolama: bekleniyor</span></span>
+        <span class="chip" id="chipStorage" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Kayıt alanı: bekleniyor</span></span>
         <span class="chip" id="chipClock" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Saat: bekleniyor</span></span>
-        <span class="chip" id="chipRfid" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">RFID: bekleniyor</span></span>
-        <span class="chip" id="chipOled" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">OLED: bekleniyor</span></span>
-        <span class="chip" id="chipSd" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">SD: bekleniyor</span></span>
+        <span class="chip" id="chipRfid" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Kart okuyucu: bekleniyor</span></span>
+        <span class="chip" id="chipOled" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">Ekran: bekleniyor</span></span>
+        <span class="chip" id="chipSd" data-state="off"><span class="chip-dot" aria-hidden="true"></span><span class="chip-label">SD yedek: bekleniyor</span></span>
       </div>
       <p class="health" id="healthNote">Cihazdan durum bilgisi bekleniyor…</p>
-      <p class="small muted" id="deviceMessage">Cihaz mesajı: —</p>
-      <p class="small muted">Olay sırası: <span id="sequence" class="num">—</span> · Son başarılı yanıt: <span id="lastSync">—</span></p>
-    </section>
-
-    <section class="panel" aria-labelledby="lastUidHeading">
-      <div class="uid-panel">
-        <div>
-          <h2 id="lastUidHeading">Son okutulan kart</h2>
-          <p class="uid-value mono" id="lastUid">—</p>
-          <p class="small muted" id="lastUidNote">Bilinmeyen bir kart okutulduğunda UID burada görünür. Forma aktarıp ad vererek kaydedebilirsiniz.</p>
-        </div>
-        <div class="uid-actions">
-          <button type="button" class="btn btn-secondary" id="copyUidButton" disabled>UID'yi kopyala</button>
-          <button type="button" class="btn btn-secondary" id="fillUidButton" disabled>Forma aktar</button>
-        </div>
-      </div>
+      <p class="small muted">Son güncelleme: <span id="lastSync">—</span></p>
     </section>
 
     <section aria-labelledby="metricsHeading">
@@ -501,36 +467,33 @@
       <div class="form-grid">
         <form id="employeeForm" novalidate autocomplete="off">
           <h2>Personel kaydı</h2>
-          <div class="field">
-            <label for="uidInput">Kart UID</label>
-            <input type="text" id="uidInput" name="uid" inputmode="text" spellcheck="false" autocapitalize="characters" maxlength="20" placeholder="Örn. A1B2C3D4" aria-describedby="uidHelp">
-            <p class="field-help" id="uidHelp">8, 14 veya 20 haneli onaltılık UID (0–9, A–F). Son okutulan kartı “Forma aktar” ile doldurabilirsiniz.</p>
-          </div>
+          <input type="hidden" id="uidInput" name="uid">
           <div class="field">
             <label for="nameInput">Ad soyad</label>
             <input type="text" id="nameInput" name="name" maxlength="48" spellcheck="false" autocomplete="off" aria-describedby="nameHelp">
-            <p class="field-help" id="nameHelp">En fazla 48 UTF-8 bayt; boş veya yalnızca boşluk olamaz. <span id="nameBytes">0</span>/48 bayt.</p>
+            <p class="field-help" id="nameHelp">En fazla 48 karakter; boş bırakılamaz.</p>
           </div>
           <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="fillUidButton" disabled>Son okutulan kartı kullan</button>
             <button type="submit" class="btn btn-primary" id="employeeSubmit" disabled>Personeli kaydet</button>
           </div>
           <p class="result" id="employeeResult" role="status" aria-live="polite"></p>
-          <p class="small muted">Aynı UID yeniden kaydedilirse yalnızca ad güncellenir; açık oturum ve toplam süre korunur. Personel silme bu sürümde yoktur.</p>
+          <p class="small muted">Kartı okutun, “Son okutulan kartı kullan” ile forma alın, adı yazıp kaydedin. Aynı kart yeniden kaydedilirse yalnızca ad güncellenir; açık oturum ve toplam süre korunur. Personel silme bu sürümde yoktur.</p>
         </form>
 
         <form id="timeForm" novalidate autocomplete="off">
           <h2>Cihaz saati</h2>
           <div class="field">
-            <label for="timeInput">Yeni saat (Türkiye, UTC+3)</label>
+            <label for="timeInput">Yeni saat (Türkiye)</label>
             <input type="datetime-local" id="timeInput" name="time" step="1" min="2024-01-01T00:00:00" max="2099-12-31T23:59:59" aria-describedby="timeHelp">
-            <p class="field-help" id="timeHelp">Cihaz, epoch değerini yerel takvim olarak saklar (UTC epoch değildir). Yıl 2024–2099 aralığında olmalıdır.</p>
+            <p class="field-help" id="timeHelp">Cihaz saati Türkiye yerel saatidir. Yıl 2024–2099 aralığında olmalıdır.</p>
           </div>
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" id="fillNowButton">Şimdiki saati doldur</button>
             <button type="submit" class="btn btn-primary" id="timeSubmit" disabled>Saati ayarla</button>
           </div>
           <p class="result" id="timeResult" role="status" aria-live="polite"></p>
-          <p class="small muted">Açık oturum varken veya yeni saat son kayıtlı olaydan önceyse değişiklik reddedilir. RTC saati geçersizken kart okutmaları reddedilir; önce buradan saat ayarlayın.</p>
+          <p class="small muted">Açık oturum varken veya yeni saat son kayıtlı olaydan önceyse değişiklik reddedilir. Saat ayarlanmamışken kart okutmaları reddedilir; önce buradan saat ayarlayın.</p>
         </form>
       </div>
     </section>
@@ -540,13 +503,12 @@
         <h2 id="tableHeading">Personel ve oturumlar</h2>
         <p class="small muted" id="tableUpdated">—</p>
       </div>
-      <p class="small muted">Saatler cihazın Türkiye yerel takvimini gösterir (epoch değeri yerel takvim olarak kodlanmıştır; UTC değildir). “Tamamlanan toplam” tüm geçmiş oturumların toplamıdır, günlük puantaj değildir. Açık oturum süresi ayrı gösterilir ve tamamlanan toplama eklenmez.</p>
+      <p class="small muted">Saatler cihazın Türkiye saatini gösterir. “Tamamlanan toplam” tüm geçmiş oturumların toplamıdır, günlük puantaj değildir. Açık oturum süresi ayrı gösterilir ve tamamlanan toplama eklenmez.</p>
       <div class="table-wrap">
         <table>
           <caption>Kayıtlı personel, giriş/çıkış durumu ve süreler</caption>
           <thead>
             <tr>
-              <th scope="col">UID</th>
               <th scope="col">Ad soyad</th>
               <th scope="col">Durum</th>
               <th scope="col">Giriş (cihaz saati)</th>
@@ -555,39 +517,30 @@
             </tr>
           </thead>
           <tbody id="employeeRows">
-            <tr class="empty-row"><td colspan="6">Henüz personel listesi alınamadı.</td></tr>
+            <tr class="empty-row"><td colspan="5">Henüz personel yok. Kartı okutup ad ekleyin.</td></tr>
           </tbody>
         </table>
       </div>
       <p class="small muted" id="employeeCount">—</p>
     </section>
 
-    <section class="panel" aria-labelledby="downloadHeading">
-      <h2 id="downloadHeading">Olay kayıtları</h2>
-      <div class="download-row">
-        <a class="csv-link" href="/api/events.csv" download="pdks-olaylar.csv">Olay kayıtlarını CSV indir</a>
-        <span class="small muted">İndirme, tarayıcının Basic kimlik doğrulamasını kullanır. CSV dosyasında saat dilimi notu bulunur; cihaz saatleri Türkiye yerel takvimidir.</span>
-      </div>
-    </section>
-
     <section class="notice" aria-labelledby="limitsHeading">
       <h2 id="limitsHeading">Güvenlik, gizlilik ve çalışma sınırları</h2>
       <ul>
-        <li><strong>Varsayılan şifreler:</strong> Kablosuz kurulum ağı ve panel şifreleri <code>Config.h</code> içinde değiştirilmeden sahaya çıkarılmamalıdır. Bu panelde şifre gösterilmez veya saklanmaz.</li>
+        <li><strong>Şifreler:</strong> Kurulum ağı ve panel şifrelerini ilk kullanımdan önce değiştirin. Bu panel şifreleri göstermez ve saklamaz.</li>
         <li><strong>Kilit yok:</strong> Bu sürüm kilit, turnike veya motor sürmez; yalnızca mesai kaydı ve raporlama yapar. Kapı açma için kullanılmamalıdır.</li>
-        <li><strong>UID klonlanabilir:</strong> 13,56 MHz kart UID'si kolayca kopyalanabilir. Bu sistem ticari sertifikalı PDKS veya anti-cloning çözümü değildir; yüksek güvenlik gereken yerde tek başına kullanılmamalıdır.</li>
+        <li><strong>Kart kimliği kopyalanabilir:</strong> Kart kimliği kolayca kopyalanabilir. Bu sistem ticari sertifikalı bir güvenlik ürünü değildir; yüksek güvenlik gereken yerlerde tek başına kullanılmamalıdır.</li>
         <li><strong>Kişisel veri:</strong> Ad ve mesai kayıtları kişisel veridir. Erişim yetkisi, saklama süresi, yedekleme ve silme yükümlülükleri KVKK kapsamında kullanıcıya aittir.</li>
-        <li><strong>Unutulan çıkış:</strong> Açık oturum kapatılmazsa sonraki günü de kapsar; bu sürümde manuel düzeltme yoktur. 5 saniyelik bekleme süresi, meşru yeniden taramayı çıkış kaydına dönüştürebilir. Yeni işlem için kartı önce okuyucudan uzaklaştırın.</li>
-        <li><strong>SD isteğe bağlı:</strong> Birincil kayıt LittleFS günlüğüdür. SD kapalıyken sistem çalışır; SD kart, tüm geçmişin eksiksiz aynası garantisi değildir.</li>
-        <li><strong>Güç:</strong> Yalnızca USB 5 V / yaklaşık 1 A deney düzeneği kullanın. 220 V bağlantısı, röle veya turnike motoru yoktur. Sigortalar breadboard'da direnç yerine kullanılmamalıdır.</li>
-        <li><strong>Buzzer:</strong> Güncel bağlantıda LOW-trigger MH-FMD modülünün I/O ucu D0/GPIO16, VCC ucu 3,3 V'tur. Ortak anot kırmızı LED D4, RFID CS D8 kullanır; eski pin planıyla karıştırmayın.</li>
+        <li><strong>Unutulan çıkış:</strong> Açık oturum kapatılmazsa sonraki günü de kapsar; bu sürümde manuel düzeltme yoktur. Kısa aralıkla yapılan yeniden okutma çıkış kaydına dönüşebilir; yeni işlem için kartı önce okuyucudan uzaklaştırın.</li>
+        <li><strong>SD yedek isteğe bağlı:</strong> Kayıtlar önce cihazın kendi kayıt alanına yazılır; SD kart takılı değilken de sistem çalışır. SD kart, tüm geçmişin eksiksiz bir kopyası garantisi değildir.</li>
+        <li><strong>Güç:</strong> Yalnızca USB 5 V / yaklaşık 1 A deney düzeneği kullanın. 220 V bağlantısı, röle veya turnike motoru yoktur. Sigorta yerine direnç kullanılmamalıdır.</li>
       </ul>
     </section>
   </main>
 
   <footer class="page-footer">
     <p>Bu panel yalnızca aynı yerel ağdaki cihazla konuşur; internet veya bulut bağlantısı kullanmaz. Varsayılan şifrelerle sahaya çıkarmayın.</p>
-    <p class="small">RFID UID kolay klonlanır; bu sistem ticari sertifikalı bir PDKS veya anti-cloning çözümü değildir. Kişisel veriler için KVKK yükümlülükleri size aittir.</p>
+    <p class="small">Kart kimliği kopyalanabilir; bu sistem sertifikalı bir güvenlik ürünü değildir. Kişisel veriler için KVKK yükümlülükleri size aittir.</p>
   </footer>
 
   <script>
@@ -630,12 +583,7 @@
         chipOled: byId('chipOled'),
         chipSd: byId('chipSd'),
         healthNote: byId('healthNote'),
-        deviceMessage: byId('deviceMessage'),
-        sequence: byId('sequence'),
         lastSync: byId('lastSync'),
-        lastUid: byId('lastUid'),
-        lastUidNote: byId('lastUidNote'),
-        copyUidButton: byId('copyUidButton'),
         fillUidButton: byId('fillUidButton'),
         metricEmployees: byId('metricEmployees'),
         metricInside: byId('metricInside'),
@@ -644,7 +592,6 @@
         employeeForm: byId('employeeForm'),
         uidInput: byId('uidInput'),
         nameInput: byId('nameInput'),
-        nameBytes: byId('nameBytes'),
         employeeSubmit: byId('employeeSubmit'),
         employeeResult: byId('employeeResult'),
         timeForm: byId('timeForm'),
@@ -787,7 +734,7 @@
         }
         var bytes = utf8Length(name);
         if (bytes > 48) {
-          return 'Ad soyad en fazla 48 UTF-8 bayt olabilir (şu an ' + bytes + ' bayt).';
+          return 'Ad soyad çok uzun; en fazla 48 karakter girebilirsiniz.';
         }
         return '';
       }
@@ -812,7 +759,7 @@
         ui.employeeSubmit.disabled = !ready || !state.status || state.status.storage_ok !== true;
         ui.timeSubmit.disabled = !ready;
         var reason = state.posting ? 'İşlem sürüyor.' :
-          (!fresh ? 'Bağlantı bilgisi eski; durumu yenileyin.' : 'Güvenlik anahtarı (CSRF) alınamadı; durumu yenileyin.');
+          (!fresh ? 'Bağlantı bilgisi eski; durumu yenileyin.' : 'Oturum doğrulanamadı; sayfayı yenileyin.');
         ui.employeeSubmit.title = ready ? '' : reason;
         ui.timeSubmit.title = ready ? '' : reason;
       }
@@ -880,11 +827,11 @@
         if (epoch !== null) {
           ui.deviceClock.textContent = formatDeviceEpoch(epoch);
           ui.deviceClock.dateTime = epochToLocalInputValue(epoch);
-          ui.clockHint.textContent = 'Türkiye saati · RTC';
+          ui.clockHint.textContent = 'Türkiye saati';
         } else {
           ui.deviceClock.textContent = '—';
           ui.deviceClock.removeAttribute('datetime');
-          ui.clockHint.textContent = state.status ? 'RTC saati geçersiz' : 'Durum bekleniyor';
+          ui.clockHint.textContent = state.status ? 'Saat ayarlanmamış' : 'Durum bekleniyor';
         }
         updateLastSync();
         updatePostAvailability();
@@ -937,8 +884,8 @@
           var emptyRow = document.createElement('tr');
           emptyRow.className = 'empty-row';
           var emptyCell = document.createElement('td');
-          emptyCell.colSpan = 6;
-          emptyCell.textContent = 'Henüz kayıtlı personel yok. Bilinmeyen kartı okutup son UID’yi forma aktarabilirsiniz.';
+          emptyCell.colSpan = 5;
+          emptyCell.textContent = 'Henüz personel yok. Kartı okutup ad ekleyin.';
           emptyRow.appendChild(emptyCell);
           rows.appendChild(emptyRow);
           ui.employeeCount.textContent = '0 / ' + MAX_EMPLOYEES + ' personel · kayıt yok';
@@ -952,7 +899,6 @@
             insideCount += 1;
           }
           var row = document.createElement('tr');
-          row.appendChild(makeCell(employee.uid, 'mono'));
           row.appendChild(makeCell(employee.name));
 
           var statusCell = document.createElement('td');
@@ -990,12 +936,13 @@
         ui.metricLive.textContent = formatDuration(liveSeconds);
       }
 
-      function renderLastUid(uid) {
-        var text = typeof uid === 'string' && uid ? uid : '—';
-        ui.lastUid.textContent = text;
-        var available = text !== '—';
-        ui.copyUidButton.disabled = !available;
-        ui.fillUidButton.disabled = !available;
+      function lastUidValue() {
+        var raw = state.status && typeof state.status.last_uid === 'string' ? state.status.last_uid : '';
+        return normalizeUid(raw);
+      }
+
+      function updateFillUidButton() {
+        ui.fillUidButton.disabled = !lastUidValue();
       }
 
       function applyStatus(data) {
@@ -1015,32 +962,32 @@
         var sdEnabled = data.sd_enabled === true;
         var sdOk = data.sd_ok === true;
 
-        setChip(ui.chipStorage, 'Depolama: ' + (storageOk ? 'tamam' : 'hata'), storageOk ? 'ok' : 'bad');
-        setChip(ui.chipClock, 'Saat: ' + (state.clockOk ? 'geçerli' : 'geçersiz'), state.clockOk ? 'ok' : 'bad');
-        setChip(ui.chipRfid, 'RFID: ' + (rfidOk ? 'hazır' : 'hata'), rfidOk ? 'ok' : 'bad');
-        setChip(ui.chipOled, 'OLED: ' + (oledOk ? 'tamam' : 'hata'), oledOk ? 'ok' : 'bad');
+        setChip(ui.chipStorage, 'Kayıt alanı: ' + (storageOk ? 'tamam' : 'hata'), storageOk ? 'ok' : 'bad');
+        setChip(ui.chipClock, 'Saat: ' + (state.clockOk ? 'tamam' : 'hata'), state.clockOk ? 'ok' : 'bad');
+        setChip(ui.chipRfid, 'Kart okuyucu: ' + (rfidOk ? 'hazır' : 'hata'), rfidOk ? 'ok' : 'bad');
+        setChip(ui.chipOled, 'Ekran: ' + (oledOk ? 'tamam' : 'hata'), oledOk ? 'ok' : 'bad');
         if (sdEnabled) {
-          setChip(ui.chipSd, 'SD: ' + (sdOk ? 'tamam' : 'hata'), sdOk ? 'ok' : 'bad');
+          setChip(ui.chipSd, 'SD yedek: ' + (sdOk ? 'tamam' : 'hata'), sdOk ? 'ok' : 'bad');
         } else {
-          setChip(ui.chipSd, 'SD: kapalı (isteğe bağlı)', 'off');
+          setChip(ui.chipSd, 'SD yedek: kapalı (isteğe bağlı)', 'off');
         }
 
         var coreOk = state.clockOk && storageOk && rfidOk && oledOk;
         var problems = [];
         if (!state.clockOk) {
-          problems.push('RTC saati geçersiz veya ayarlanmamış; okutmalar reddedilir, panelden saat ayarlayın.');
+          problems.push('Cihaz saati ayarlanmamış; önce saat ayarını yapın.');
         }
         if (!storageOk) {
-          problems.push('Depolama hatası; kayıt yapılamıyor olabilir.');
+          problems.push('Kayıt alanına yazılamıyor; yeni kayıtlar kaybolabilir.');
         }
         if (!rfidOk) {
-          problems.push('RFID okuyucu yanıt vermiyor; 3,3 V besleme ve SPI kablolarını kontrol edin.');
+          problems.push('Kart okuyucu yanıt vermiyor; bağlantısını kontrol edin.');
         }
         if (!oledOk) {
-          problems.push('OLED yanıt vermiyor; I2C adresi ve kabloları kontrol edin.');
+          problems.push('Ekran yanıt vermiyor; bağlantısını kontrol edin.');
         }
         if (sdEnabled && !sdOk) {
-          problems.push('SD kart hatası; birincil kayıt LittleFS’te, SD isteğe bağlı yedektir.');
+          problems.push('SD yedek kartı okunamıyor; kayıtlar cihazın kendi kayıt alanında tutulur.');
         }
         if (problems.length) {
           ui.healthNote.textContent = 'Dikkat: ' + problems.join(' ');
@@ -1049,11 +996,6 @@
           ui.healthNote.textContent = 'Temel durum bildirimleri sağlıklı görünüyor.';
           ui.healthNote.setAttribute('data-state', 'ok');
         }
-
-        ui.deviceMessage.textContent = 'Cihaz mesajı: ' +
-          (typeof data.message === 'string' && data.message ? data.message : '—');
-        ui.sequence.textContent = (typeof data.sequence === 'number' && isFinite(data.sequence))
-          ? String(data.sequence) : '—';
 
         var employees = [];
         if (Array.isArray(data.employees)) {
@@ -1066,7 +1008,7 @@
         }
         renderEmployees(employees);
         renderMetrics(employees);
-        renderLastUid(typeof data.last_uid === 'string' ? data.last_uid : '');
+        updateFillUidButton();
         ui.tableUpdated.textContent = state.clockOk
           ? 'Cihaz saati: ' + formatDeviceEpoch(data.now)
           : 'Cihaz saati geçersiz';
@@ -1203,53 +1145,12 @@
           if (error && error.status === 401) {
             message = 'Kimlik doğrulama başarısız (HTTP 401). Tarayıcı oturumunu/şifreyi kontrol edin.';
           } else {
-            message = 'Güvenlik anahtarı (CSRF) doğrulanamadı. İstek otomatik tekrarlanmadı; durumu yenileyip tekrar deneyin.';
+            message = 'Oturum doğrulanamadı; sayfayı yenileyin. İstek otomatik tekrarlanmadı.';
           }
           loadStatus();
         }
         setResult(resultElement, message, 'error');
         updatePostAvailability();
-      }
-
-      function updateNameBytes() {
-        var name = ui.nameInput.value.trim();
-        var bytes = utf8Length(name);
-        ui.nameBytes.textContent = String(bytes);
-        var help = byId('nameHelp');
-        if (bytes > 48) {
-          help.classList.add('is-error');
-          ui.nameInput.setAttribute('aria-invalid', 'true');
-        } else {
-          help.classList.remove('is-error');
-          ui.nameInput.removeAttribute('aria-invalid');
-        }
-      }
-
-      async function copyText(text) {
-        if (navigator.clipboard && window.isSecureContext) {
-          try {
-            await navigator.clipboard.writeText(text);
-            return true;
-          } catch (clipboardError) {
-            // Fall through to the selection-based copy for HTTP panels.
-          }
-        }
-        var area = document.createElement('textarea');
-        area.value = text;
-        area.setAttribute('readonly', '');
-        area.style.position = 'fixed';
-        area.style.top = '-1000px';
-        area.style.opacity = '0';
-        document.body.appendChild(area);
-        area.select();
-        var copied = false;
-        try {
-          copied = document.execCommand('copy');
-        } catch (copyError) {
-          copied = false;
-        }
-        document.body.removeChild(area);
-        return copied;
       }
 
       ui.themeToggle.addEventListener('click', function () {
@@ -1287,25 +1188,13 @@
         }
       });
 
-      ui.copyUidButton.addEventListener('click', async function () {
-        var uid = ui.lastUid.textContent;
-        if (!uid || uid === '—') {
-          return;
-        }
-        var copied = await copyText(uid);
-        ui.lastUidNote.textContent = copied
-          ? 'UID panoya kopyalandı.'
-          : 'Kopyalama başarısız oldu; UID’yi elle seçebilirsiniz.';
-      });
-
       ui.fillUidButton.addEventListener('click', function () {
-        var uid = ui.lastUid.textContent;
-        if (!uid || uid === '—') {
+        var uid = lastUidValue();
+        if (!uid) {
           return;
         }
-        ui.uidInput.value = uid.toUpperCase();
-        ui.uidInput.removeAttribute('aria-invalid');
-        ui.lastUidNote.textContent = 'UID forma aktarıldı; ad girip personeli kaydedin.';
+        ui.uidInput.value = uid;
+        setResult(ui.employeeResult, 'Kart hazır; ad girip personeli kaydedin.', 'ok');
         if (!ui.nameInput.value.trim()) {
           ui.nameInput.focus();
         } else {
@@ -1313,9 +1202,8 @@
         }
       });
 
-      ui.nameInput.addEventListener('input', updateNameBytes);
-      ui.uidInput.addEventListener('input', function () {
-        ui.uidInput.removeAttribute('aria-invalid');
+      ui.nameInput.addEventListener('input', function () {
+        ui.nameInput.removeAttribute('aria-invalid');
       });
       ui.timeInput.addEventListener('input', function () {
         state.timeTouched = true;
@@ -1336,12 +1224,12 @@
 
         var uid = normalizeUid(ui.uidInput.value);
         if (!uid) {
-          ui.uidInput.setAttribute('aria-invalid', 'true');
-          setResult(ui.employeeResult, 'UID 8, 14 veya 20 haneli onaltılık olmalı (0–9, A–F).', 'error');
-          ui.uidInput.focus();
+          setResult(ui.employeeResult, 'Kart okunamadı; kartı okutup “Son okutulan kartı kullan” seçin.', 'error');
+          if (!ui.fillUidButton.disabled) {
+            ui.fillUidButton.focus();
+          }
           return;
         }
-        ui.uidInput.removeAttribute('aria-invalid');
 
         var name = ui.nameInput.value.trim();
         var nameError = validateName(name);
@@ -1354,7 +1242,7 @@
         ui.nameInput.removeAttribute('aria-invalid');
 
         if (!state.csrf) {
-          setResult(ui.employeeResult, 'Güvenlik anahtarı (CSRF) alınamadı; durumu yenileyin.', 'error');
+          setResult(ui.employeeResult, 'Oturum doğrulanamadı; sayfayı yenileyin.', 'error');
           loadStatus();
           return;
         }
@@ -1369,8 +1257,7 @@
               typeof data.message === 'string' && data.message ? data.message : 'Personel kaydedildi.', 'ok');
             ui.uidInput.value = '';
             ui.nameInput.value = '';
-            updateNameBytes();
-            ui.uidInput.focus();
+            ui.nameInput.focus();
             await loadStatus();
           } else {
             setResult(ui.employeeResult,
@@ -1399,7 +1286,7 @@
           return;
         }
         if (!state.csrf) {
-          setResult(ui.timeResult, 'Güvenlik anahtarı (CSRF) alınamadı; durumu yenileyin.', 'error');
+          setResult(ui.timeResult, 'Oturum doğrulanamadı; sayfayı yenileyin.', 'error');
           loadStatus();
           return;
         }
@@ -1471,7 +1358,6 @@
 
       updatePostAvailability();
       ui.timeInput.value = istanbulNowInput();
-      updateNameBytes();
       renderClock();
       setInterval(renderClock, 1000);
 

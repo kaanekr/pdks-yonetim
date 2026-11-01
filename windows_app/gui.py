@@ -56,7 +56,7 @@ class Manager:
             self.archive = WorkforceStore(':memory:')
             self.archive_open_warning = 'Yerel arşiv açılamadı. Bu oturumdaki yeni veriler geçici; eski arşiv sıfırlanmadı.'
             self.archive_warning.set(self.archive_open_warning)
-        root.title('PDKS Yönetim v' + CURRENT_VERSION + ' — Güncelleme' + (' — DEMO' if demo else ''))
+        root.title('PDKS Yönetim' + (' — DEMO' if demo else ''))
         height = max(680, min(850, root.winfo_screenheight() - 100))
         root.geometry(f'1280x{height}')
         root.minsize(1100, 680)
@@ -96,7 +96,7 @@ class Manager:
         self.remember_check = ttk.Checkbutton(memory, text='Şifreyi hatırla', variable=self.remember, command=self._remember_changed)
         self.remember_check.pack(side='left')
         ttk.Label(memory, text='IP ve kullanıcı hatırlanır. Şifre Windows kasasında saklanır; otomatik bağlantı yok.').pack(side='left', padx=10)
-        self.status_text = tk.StringVar(value='Bağlı değil. HTTP yalnız güvenilen yerel ağ içindir.')
+        self.status_text = tk.StringVar(value='Cihaz bağlı değil.')
         ttk.Label(base, textvariable=self.status_text, wraplength=1020, foreground='#304c64').pack(fill='x', pady=(0, 10))
         tabs = ttk.Notebook(base)
         tabs.pack(fill='both', expand=True)
@@ -116,39 +116,41 @@ class Manager:
         tabs.add(manual, text='  Manuel Mesai  ')
         tabs.add(clock, text='  Saat ve Kurtarma  ')
         self.people = self._tree(people, ('Ad', 'Kart UID', 'Durum', 'İçeride', 'Tamamlanan süre'), (230, 180, 90, 80, 130))
+        self.people.configure(displaycolumns=('Ad', 'Durum', 'İçeride', 'Tamamlanan süre'))
         self.people.bind('<<TreeviewSelect>>', self.on_select)
         editor = ttk.Frame(people)
         editor.pack(side='bottom', fill='x', before=self.people.master)
         form = ttk.Frame(editor)
         form.pack(fill='x', pady=12)
         self.name, self.card, self.active = tk.StringVar(), tk.StringVar(), tk.BooleanVar(value=True)
+        self.card_status = tk.StringVar(value='Kart: okutun veya son kartı kullanın.')
+        self.card.trace_add('write', lambda *_: self._card_changed())
         ttk.Label(form, text='Ad soyad').grid(row=0, column=0, sticky='w')
-        ttk.Label(form, text='Kart UID').grid(row=0, column=1, sticky='w', padx=12)
         ttk.Entry(form, textvariable=self.name, width=32).grid(row=1, column=0, sticky='ew')
-        ttk.Entry(form, textvariable=self.card, width=27).grid(row=1, column=1, padx=12)
         self.active_check = ttk.Checkbutton(form, text='Aktif', variable=self.active)
-        self.active_check.grid(row=1, column=2)
-        self._button(form, 'Yeni personel', self.new_person).grid(row=1, column=3, padx=8)
-        self._button(form, 'Kaydet', self.save_person).grid(row=1, column=4)
-        self.identity_text = tk.StringVar(value='Yeni personel: kart UID alanını doldurun veya listeden düzenlenecek kişiyi seçin.')
+        self.active_check.grid(row=1, column=1, padx=12)
+        self._button(form, 'Yeni personel', self.new_person).grid(row=1, column=2, padx=8)
+        self._button(form, 'Kaydet', self.save_person).grid(row=1, column=3)
+        self.identity_text = tk.StringVar(value='Yeni personel: adı girin; kartı okutup “Son okutulan kartı kullan” seçin.')
         ttk.Label(editor, textvariable=self.identity_text, wraplength=960).pack(anchor='w')
-        self._button(editor, 'Son okutulan UID’yi forma al', self.use_last_card).pack(anchor='w', pady=8)
+        ttk.Label(editor, textvariable=self.card_status, foreground='#304c64').pack(anchor='w', pady=(6, 0))
+        self._button(editor, 'Son okutulan kartı kullan', self.use_last_card).pack(anchor='w', pady=8)
         self.delete_person_button = self._button(editor, 'Seçili personeli kalıcı sil…', self.delete_person)
         self.delete_person_button.pack(anchor='w', pady=4)
         ttk.Label(editor, text='Personeli silmek kartı/personel kaydını kaldırır; isimli geçmiş korunur. Açık oturum önce kapatılmalı/kurtarılmalı.', wraplength=960).pack(anchor='w')
         bar = ttk.Frame(records)
         bar.pack(fill='x', pady=(0, 10))
         self._button(bar, 'Kayıtları getir', self.load_events).pack(side='left')
-        self._button(bar, 'Ham CSV indir / yedekle', self.export_csv).pack(side='left', padx=8)
+        self._button(bar, 'Kayıtları dışa aktar', self.export_csv).pack(side='left', padx=8)
         self.delete_session_button = self._button(bar, 'Seçili oturumu kalıcı sil…', self.delete_session)
         self.delete_session_button.pack(side='left', padx=8)
         self.events_tree = self._tree(records, ('Sıra', 'Cihaz yerel tarih/saat', 'Sabit personel UID', 'İşlem', 'Süre / açıklama',
                 'Kayıttaki ad', 'Adın kaynağı', 'Silinmiş personel'), (55, 175, 155, 270, 250, 220, 190, 140))
-        self.events_tree.configure(displaycolumns=('Sıra', 'Cihaz yerel tarih/saat', 'Kayıttaki ad', 'İşlem',
-                'Süre / açıklama', 'Sabit personel UID', 'Adın kaynağı', 'Silinmiş personel'))
-        ttk.Label(records, text='M = manuel mesai. R = saat kurtarma, mesai DEĞİLDİR. Eski kayıtlarda ad sonradan eşleştirilir; tarihsel ad olduğu varsayılmaz. Adın kaynağı sütununu kontrol edin.', wraplength=1100).pack(anchor='w', pady=8)
+        self.events_tree.configure(displaycolumns=('Cihaz yerel tarih/saat', 'Kayıttaki ad', 'İşlem',
+                'Süre / açıklama'))
+        ttk.Label(records, text='Manuel mesai ve saat kurtarma kayıtları ayrı gösterilir. Eski kayıtlarda ad sonradan eşleştirilebilir; tarihsel ad olduğu varsayılmaz.', wraplength=1100).pack(anchor='w', pady=8)
         ttk.Label(manual,text='Geçmiş tarihli tamamlanmış mesai ekle',font=('Segoe UI',13,'bold')).pack(anchor='w',pady=(0,12))
-        ttk.Label(manual,text='Personel (sabit geçmiş kimliği)').pack(anchor='w')
+        ttk.Label(manual,text='Personel').pack(anchor='w')
         self.manual_choice=ttk.Combobox(manual,state='readonly',width=62)
         self.manual_choice.pack(anchor='w',pady=(3,12))
         self.manual_uids=[]
@@ -162,8 +164,8 @@ class Manager:
         self.manual_button.pack(anchor='w',pady=8)
         ttk.Label(manual,text='Biçim: YYYY-AA-GG SS:DD:SN. Süre başlangıç/bitişten hesaplanır. Cihaz saati doğru olmalı; gelecekteki bitiş ve açık oturumu olan kişi reddedilir.',wraplength=880).pack(anchor='w',pady=8)
         ttk.Label(manual,text='Çakışan mesai tekrar eklenmez. Yanlış tamamlanmış M kaydı, yeni cihaz yazılımıyla Giriş / Çıkış Kayıtları bölümünden açık onayla silinebilir.',foreground='#a23e20',wraplength=880).pack(anchor='w',pady=8)
-        ttk.Label(manual,text='Manuel mesai için cihazda v1.1 firmware gerekir. Program cihaza otomatik yazılım yüklemez.',wraplength=880).pack(anchor='w')
-        ttk.Label(clock, text='Türkiye yerel tarih/saat (UTC dönüşümü uygulanmaz)', font=('Segoe UI', 12, 'bold')).pack(anchor='w')
+        ttk.Label(manual,text='Manuel mesai için cihaz yönetim yazılımı gerekir. Program cihaza kendiliğinden yazılım yüklemez.',wraplength=880).pack(anchor='w')
+        ttk.Label(clock, text='Türkiye saati', font=('Segoe UI', 12, 'bold')).pack(anchor='w')
         self.time = tk.StringVar(value=turkey_now())
         timebar = ttk.Frame(clock)
         timebar.pack(fill='x', pady=12)
@@ -172,12 +174,12 @@ class Manager:
         self._button(clock, 'Normal saat ayarla', lambda: self.set_time(False)).pack(anchor='w')
         ttk.Label(clock, text='Normal işlem açık oturumda ve geriye saat almada reddedilir. Saat bozulup kilitlendiğinde aşağıdaki yönetici kurtarmasını kullanın.', wraplength=880).pack(anchor='w', pady=12)
         self._button(clock, 'Açık oturumları iptal et ve saati kurtar…', lambda: self.set_time(True)).pack(anchor='w')
-        ttk.Label(clock, text='Kurtarma: önce CSV yedeği alır; geçmiş satırlarını ve tamamlanan toplamları korur. TÜM açık oturumları süre eklemeden iptal eder, günlüğe R yönetici olayı ekler. Yeniden onay ister; otomatik tekrarlanmaz.', foreground='#a23e20', wraplength=880).pack(anchor='w', pady=12)
-        ttk.Label(clock, text='Yeni yönetim firmware’i gerekir. Onaylı imzalı firmware yükleme Güncelleme sekmesindedir; format/uploadfs yapılmaz. Yeni kayıt neslinden sonra eski firmware’e dönmeyin.', wraplength=880).pack(anchor='w', pady=8)
+        ttk.Label(clock, text='Kurtarma: geçmişi ve tamamlanan toplamları korur; TÜM açık oturumları süre eklemeden iptal eder. Yeniden onay ister; otomatik tekrarlanmaz.', foreground='#a23e20', wraplength=880).pack(anchor='w', pady=12)
+        ttk.Label(clock, text='Cihaz yazılımı güncel değilse saat kurtarma için Güncelleme sekmesini kullanın. Yeni kayıtlardan sonra eski sürüme dönmeyin.', wraplength=880).pack(anchor='w', pady=8)
         update_tab = ttk.Frame(tabs, padding=12)
         tabs.add(update_tab, text='Güncelleme')
         self._build_updates(update_tab)
-        self.footer = tk.StringVar(value='Bağlan demeden cihaz isteği yoktur. Otomatik yenileme isteğe bağlıdır; otomatik cihaz yazma işlemi yoktur.')
+        self.footer = tk.StringVar(value='Cihaza bağlanmadan işlem yapılmaz. Otomatik yenileme isteğe bağlıdır.')
         ttk.Label(base, textvariable=self.footer, wraplength=1150).pack(side='bottom', fill='x', pady=(8, 0), before=tabs)
         self._enable()
         root.protocol('WM_DELETE_WINDOW', self.close)
@@ -207,7 +209,7 @@ class Manager:
     def _build_overview(self, parent):
         self.auto_refresh = tk.BooleanVar(value=False)
         self.dashboard_text = tk.StringVar(value='Canlı cihaz bağlantısı yok. Puantaj / Rapor bölümünden bilgisayar arşivini açabilirsiniz.')
-        self.health_text = tk.StringVar(value='RTC / okuyucu / depolama: henüz okunmadı.')
+        self.health_text = tk.StringVar(value='Cihaz durumu: henüz okunmadı.')
         bar = ttk.Frame(parent)
         bar.pack(fill='x', pady=(0, 10))
         ttk.Checkbutton(bar, text='Bağlantıdan sonra 30 saniyede bir otomatik oku',
@@ -218,6 +220,7 @@ class Manager:
         ttk.Label(parent, textvariable=self.archive_warning, foreground='#a23e20', wraplength=1150).pack(anchor='w', pady=5)
         self.dashboard_tree = self._tree(parent, ('Personel', 'Sabit UID', 'Durum', 'Giriş zamanı', 'Tamamlanan', 'Açık süre (tahmini)'),
                                           (220, 150, 90, 185, 130, 170))
+        self.dashboard_tree.configure(displaycolumns=('Personel', 'Durum', 'Giriş zamanı', 'Tamamlanan', 'Açık süre (tahmini)'))
         ttk.Label(parent, text='Açık süre tamamlanan mesaiye eklenmez. Eksik çıkışa otomatik bitiş yazılmaz. '
                   'Devamsızlık için önce vardiya atayın; raporlar son alınan veri ve seçili kurallara göredir.',
                   wraplength=1150).pack(anchor='w', pady=10)
@@ -226,41 +229,39 @@ class Manager:
         self.next_refresh = time.monotonic() + 30
 
     def _build_updates(self, parent):
-        ttk.Label(parent, text='GitHub üzerinden imzalı güncelleme', font=('Segoe UI', 14, 'bold')).pack(anchor='w')
-        ttk.Label(parent, text='Kaynak: github.com/kaanekr/pdks-yonetim • Program: v' + CURRENT_VERSION).pack(anchor='w', pady=8)
-        self.update_text = tk.StringVar(value='Kendiliğinden indirme/yükleme yok. Önce sürümleri kontrol edin.')
-        self.device_update_text = tk.StringVar(value='Cihaz bağlı değil. İlk OTA kurulumu bir kez USB gerektirir.')
+        ttk.Label(parent, text='Güncelleme', font=('Segoe UI', 14, 'bold')).pack(anchor='w')
+        ttk.Label(parent, text='Program ve cihaz yazılımı').pack(anchor='w', pady=8)
+        self.update_text = tk.StringVar(value='Kendiliğinden indirme/yükleme yok. Güncellemeleri kontrol edin.')
+        self.device_update_text = tk.StringVar(value='Cihaz bağlı değil. İlk cihaz yazılımı güncellemesi bir kez USB gerektirir.')
         ttk.Label(parent, textvariable=self.update_text, wraplength=1000).pack(anchor='w', pady=8)
         ttk.Label(parent, textvariable=self.device_update_text, wraplength=1000).pack(anchor='w', pady=8)
         row = ttk.Frame(parent)
         row.pack(fill='x', pady=12)
-        self.updates_check_btn = ttk.Button(row, text='Sürümleri kontrol et', command=self.check_updates)
+        self.updates_check_btn = ttk.Button(row, text='Güncellemeleri kontrol et', command=self.check_updates)
         self.updates_check_btn.pack(side='left')
-        self.updates_download_btn = ttk.Button(row, text='Dosyaları indir / hazırla', command=self.download_updates)
+        self.updates_download_btn = ttk.Button(row, text='Güncellemeyi indir', command=self.download_updates)
         self.updates_download_btn.pack(side='left', padx=8)
-        self.updates_app_btn = ttk.Button(parent, text='Windows programını güncelle…', command=self.install_app_update)
+        self.updates_app_btn = ttk.Button(parent, text='Programı güncelle…', command=self.install_app_update)
         self.updates_app_btn.pack(anchor='w', pady=8)
-        self.updates_firmware_btn = ttk.Button(parent, text='Cihaz firmware’ini kablosuz güncelle…', command=self.install_firmware_update)
+        self.updates_firmware_btn = ttk.Button(parent, text='Cihaz yazılımını güncelle…', command=self.install_firmware_update)
         self.updates_firmware_btn.pack(anchor='w', pady=8)
-        ttk.Label(parent, text='İmza + SHA256 + hedef/sürüm kontrolü zorunlu. Eski sürüme otomatik dönüş yok. '
-            'Program güncellemesinde eski EXE yalnız sağlık kontrolü sırasında tutulur; yeni sürüm doğrulanınca silinir. Yeni sürüm açılmazsa geri alınır. '
-            'Kayıt/ayar dosyaları değiştirilmez. Firmware yalnız aynı ağdaki, OTA destekli ve açık oturumu olmayan cihaza gönderilir.',
+        ttk.Label(parent, text='Güncellemeler doğrulanır; eski sürüme otomatik dönülmez. '
+            'Program güncellemesinde eski sürüm yalnız sağlık kontrolü sırasında tutulur; yeni sürüm doğrulanınca silinir, açılmazsa geri alınır. '
+            'Kayıt ve ayarlar değiştirilmez. Cihaz yazılımı yalnız aynı ağdaki, açık oturumu olmayan cihaza gönderilir.',
             wraplength=1000).pack(anchor='w', pady=10)
         ttk.Label(parent, text='Cihazın kurulum Wi-Fi ağında internet olmayabilir: dosyaları önce internet varken indirin, '
-            'programı kapatmadan cihaz ağına geçip bağlanın. İlk özel USB kurulumu ve her yükleme ayrı onay ister. '
+            'programı kapatmadan cihaz ağına geçip bağlanın. İlk cihaz yazılımı kurulumu ve her yükleme ayrı onay ister. '
             'DEMO gerçek güncelleme indirmez/yüklemez.', wraplength=1000, foreground='#a23e20').pack(anchor='w', pady=8)
 
     def check_updates(self):
         if self.demo or self.busy:
             return
         from windows_app.updates import check_release
-        self.update_text.set('GitHub sürümü ve yayıncı imzası kontrol ediliyor…')
+        self.update_text.set('Güncellemeler kontrol ediliyor…')
         def done(release):
             self.update_release, self.update_downloads = release, {}
             manifest = release.manifest
-            self.update_text.set('Doğrulanan sürüm: v' + manifest['version'] +
-                (' — programınız güncel.' if manifest['sequence'] <= CURRENT_SEQUENCE else ' — yeni Windows sürümü var.') +
-                '\n' + manifest['notes'][:1500])
+            self.update_text.set('Programınız güncel.' if manifest['sequence'] <= CURRENT_SEQUENCE else 'Yeni sürüm hazır.')
             self._enable()
         self.job(check_release, done)
 
@@ -274,10 +275,10 @@ class Manager:
         if self.demo or self.busy or self.update_release is None:
             return
         release = self.update_release
-        self.update_text.set('İmzalı Windows ve firmware dosyaları indiriliyor; henüz yükleme yapılmıyor…')
+        self.update_text.set('Güncelleme dosyaları indiriliyor; henüz yükleme yapılmıyor…')
         def done(paths):
             self.update_downloads = paths
-            self.update_text.set('Dosyalar doğrulandı. Cihaz ağına geçebilirsiniz; programı açık tutun. Yükleme için ayrıca düğmeye basıp onaylayın.')
+            self.update_text.set('Güncelleme hazır. Cihaz ağına geçebilirsiniz; programı açık tutun. Yükleme için ayrıca onaylayın.')
         self.job(lambda: {kind: self._update_path(release, kind) for kind in ('windows', 'firmware')}, done)
 
     def install_app_update(self):
@@ -285,10 +286,9 @@ class Manager:
             return
         release = self.update_release
         if release.manifest['sequence'] <= CURRENT_SEQUENCE or not getattr(sys, 'frozen', False):
-            messagebox.showinfo('Program güncelleme', 'Yeni sürüm yok veya paketli EXE kullanılmıyor.', parent=self.root)
+            messagebox.showinfo('Program güncelleme', 'Yeni sürüm yok veya program bu kopyadan güncellenemiyor.', parent=self.root)
             return
-        if not messagebox.askyesno('Programı güncelle', 'v' + release.manifest['version'] +
-                ' doğrulanıp yüklenecek. Program kapanıp yeniden açılır; eski EXE sağlık kontrolünden sonra silinir. Yeni sürüm açılmazsa geri alınır. Kaydedilmemiş formlarınızı tamamladınız mı?', parent=self.root):
+        if not messagebox.askyesno('Programı güncelle', 'Yeni sürüm doğrulanıp yüklenecek. Program kapanıp yeniden açılır; eski sürüm sağlık kontrolünden sonra silinir. Yeni sürüm açılmazsa geri alınır. Kaydedilmemiş formlarınızı tamamladınız mı?', parent=self.root):
             return
         def done(path):
             from windows_app.self_update import prepare_self_update
@@ -304,7 +304,7 @@ class Manager:
                 return
             self._closing_for_update = True
             self.close()
-        self.update_text.set('Yeni Windows EXE doğrulanıyor…')
+        self.update_text.set('Yeni sürüm doğrulanıyor…')
         self.job(lambda: self._update_path(release, 'windows'), done)
 
     def install_firmware_update(self):
@@ -313,17 +313,17 @@ class Manager:
         release, client = self.update_release, self.client
         if (self.state.get('ota_update') is not True or self.state.get('firmware_target') != FIRMWARE_TARGET or
                 self.state.get('storage_ok') is not True):
-            messagebox.showerror('Firmware güncelleme', 'Bu cihazda önce özel USB / OTA kurulumu gerekiyor.', parent=self.root)
+            messagebox.showerror('Cihaz yazılımı güncelleme', 'Bu cihazda ilk kurulum için bir kez USB gerekiyor.', parent=self.root)
             return
-        if not messagebox.askyesno('İmzalı firmware yükle', 'Cihaz aynı ağda olmalı ve açık oturum bulunmamalı. '
-                'Önce PC arşivi ZIP yedeği alınır, sonra imzalı v' + release.manifest['firmware']['version'] +
-                ' yüklenir. Cihaz yeniden başlar; elektrik kesilmemeli. Günlük/Wi-Fi/şifre dosyaları korunur. Onaylıyor musunuz?', parent=self.root):
+        if not messagebox.askyesno('Cihaz yazılımını yükle', 'Cihaz aynı ağda olmalı ve açık oturum bulunmamalı. '
+                'Önce bu bilgisayara yedek alınır, sonra yeni cihaz yazılımı yüklenir. Cihaz yeniden başlar; elektrik kesilmemeli. '
+                'Günlük, Wi-Fi ve şifre dosyaları korunur. Onaylıyor musunuz?', parent=self.root):
             return
-        backup = filedialog.asksaveasfilename(parent=self.root, title='Firmware öncesi PC arşivi yedeği',
-            defaultextension='.zip', initialfile='PDKS_OTA_oncesi_arsiv.zip', filetypes=[('ZIP arşivi', '*.zip')])
+        backup = filedialog.asksaveasfilename(parent=self.root, title='Cihaz yazılımı öncesi yedek',
+            defaultextension='.zip', initialfile='PDKS_yedek.zip', filetypes=[('Yedek dosyası', '*.zip')])
         if not backup:
             return
-        self.update_text.set('Firmware doğrulanıyor, arşiv yedekleniyor ve onaylı OTA gönderiliyor…')
+        self.update_text.set('Cihaz yazılımı doğrulanıyor, yedek alınıyor ve güncelleme gönderiliyor…')
         def work():
             path = self._update_path(release, 'firmware')
             before = self._read_snapshot(client)
@@ -334,7 +334,7 @@ class Manager:
             self._apply_snapshot(value[1])
             self.online = False
             self.firmware_update_pending = True
-            self.update_text.set('İmzalı yükleme cihaz tarafından onaylandı. Yeniden başladıktan sonra Yenile ile sürümü kontrol edin; otomatik tekrar yapılmaz.')
+            self.update_text.set('Yeni cihaz yazılımı cihaz tarafından onaylandı. Yeniden başladıktan sonra Yenile ile sürümü kontrol edin; otomatik tekrar yapılmaz.')
             self._enable()
         self.job(work, done)
 
@@ -358,16 +358,16 @@ class Manager:
         stamp = self.last_success_at or 'henüz tutarlı kayıt görüntüsü alınmadı'
         self.dashboard_text.set(f'{link} | İçeride: {inside} / {len(people)} | Son veri: {stamp} | {elapsed} sn önce')
         def health(key):
-            return 'OK' if self.state.get(key) else 'HATA / bilinmiyor'
+            return 'Tamam' if self.state.get(key) else 'Sorun'
         drift = ''
         if self.state.get('clock_ok') and self.state.get('now'):
             difference = int(self.state['now']) + (elapsed if self.online else 0) - encode_local_time(turkey_now())
             if abs(difference) > 120:
-                drift = f' | PC Türkiye saatiyle fark: {difference:+d} sn — iki saati kontrol edin'
-        self.health_text.set('Saat: ' + health('clock_ok') + ' | Depo: ' + health('storage_ok') +
-                             ' | RFID: ' + health('rfid_ok') + ' | SD ayna: ' +
+                drift = ' | Bilgisayar ve cihaz saati farklı; saatleri kontrol edin'
+        self.health_text.set('Saat: ' + health('clock_ok') + ' | Kayıt alanı: ' + health('storage_ok') +
+                             ' | Kart okuyucu: ' + health('rfid_ok') + ' | SD yedek: ' +
                              (health('sd_ok') if self.state.get('sd_enabled') else 'kapalı') +
-                             drift + ' | Saat kurtarma kaydı mesai değildir.')
+                             drift + ' | Saat kurtarma kaydı çalışma süresi değildir.')
         rows = []
         for person in people:
             live = int(person.get('live_seconds', 0))
@@ -616,12 +616,12 @@ class Manager:
     def _apply_status(self, state):
         self.state = state
         self.firmware_update_pending = False
-        self.device_update_text.set('Cihaz firmware: ' + str(state.get('firmware_version', 'eski sürüm')) +
-            (' — imzalı OTA destekleniyor.' if state.get('ota_update') else ' — ilk OTA desteği için bir kez özel USB kurulumu gerekli.'))
+        self.device_update_text.set('Cihaz yazılımı: ' + str(state.get('firmware_version', 'eski sürüm')) +
+            (' — kablosuz güncelleme hazır.' if state.get('ota_update') else ' — ilk kurulum için bir kez USB gerekir.'))
         index=self.manual_choice.current()
         manual_uid=self.manual_uids[index] if 0<=index<len(self.manual_uids) else None
         self.manual_uids=[e['uid'] for e in state['employees']]
-        self.manual_choice['values']=[e['name']+'  ['+e['uid']+']'+(' — pasif' if not e.get('active',True) else '') for e in state['employees']]
+        self.manual_choice['values']=[e['name']+(' — pasif' if not e.get('active',True) else '') for e in state['employees']]
         if manual_uid in self.manual_uids:
             self.manual_choice.current(self.manual_uids.index(manual_uid))
         elif self.manual_uids:
@@ -637,12 +637,16 @@ class Manager:
         elif selected and selected not in self.people.selection():
             self.people.selection_set(selected)
         inside = sum(bool(e['inside']) for e in state['employees'])
-        clock = format_local_time(state.get('now')) if state.get('clock_ok') else 'HATALI — ' + str(state.get('clock_reason', ''))
-        self.status_text.set(f"{self.client.address}  |  Saat: {clock}  |  İçeride: {inside}  |  Depo: {'OK' if state.get('storage_ok') else 'HATA'}")
+        clock = format_local_time(state.get('now')) if state.get('clock_ok') else 'Ayarlanmalı'
+        self.status_text.set(f"Cihaz bağlı  |  Saat: {clock}  |  İçeride: {inside}")
         if not state.get('personnel_management'):
-            self.identity_text.set('Eski firmware: ad ekle/düzenle çalışır; kart değiştirme, pasife alma ve saat kurtarma için güncelleme gerekli.')
+            self.identity_text.set('Cihaz yazılımı güncel değil; ad ekle/düzenle çalışır, kart değiştirme ve saat kurtarma için güncelleme gerekir.')
         self._enable()
         self._render_dashboard()
+
+    def _card_changed(self):
+        if hasattr(self, 'card_status'):
+            self.card_status.set('Kart: eşleşti' if self.card.get() else 'Kart: okutun veya son kartı kullanın.')
 
     def new_person(self):
         self.selected_uid = None
@@ -650,7 +654,7 @@ class Manager:
         self.card.set('')
         self.active.set(True)
         self.people.selection_remove(self.people.selection())
-        self.identity_text.set('Yeni personel. Kaydetmeden önce kart UID ve adı kontrol edin.')
+        self.identity_text.set('Yeni personel: adı girin; kartı okutup “Son okutulan kartı kullan” seçin.')
 
     def on_select(self, _event=None):
         selection = self.people.selection()
@@ -664,24 +668,30 @@ class Manager:
             self.name.set(e['name'])
             self.card.set(e.get('card_uid', e['uid']))
             self.active.set(e.get('active', True))
-            self.identity_text.set('Sabit geçmiş/personel UID: ' + e['uid'] + ' — kart değişse de geçmiş bu kimlikte kalır.')
+            self.identity_text.set('Bu personelin geçmişi korunur; kart değişse de geçmiş bu kişide kalır.')
 
     def use_last_card(self):
         try:
             self.card.set(canonical_uid(self.state.get('last_uid', '')))
-        except DeviceError as exc:
-            messagebox.showerror('Kart', str(exc), parent=self.root)
+            self.identity_text.set('Kart hazır; adı girip personeli kaydedin.')
+        except DeviceError:
+            messagebox.showerror('Kart', 'Kart okunamadı. Kartı okuyucuya okutup yeniden deneyin.', parent=self.root)
 
     def save_person(self):
         try:
-            card, name = canonical_uid(self.card.get()), checked_name(self.name.get())
+            name = checked_name(self.name.get())
         except DeviceError as exc:
             messagebox.showerror('Personel', str(exc), parent=self.root)
+            return
+        try:
+            card = canonical_uid(self.card.get())
+        except DeviceError:
+            messagebox.showerror('Personel', 'Kart eşleşmedi. Kartı okutup “Son okutulan kartı kullan” seçin.', parent=self.root)
             return
         uid = self.selected_uid or card
         create = self.selected_uid is None
         active, state, client = self.active.get(), copy.deepcopy(self.state), self.client
-        if not messagebox.askyesno('Personeli kaydet', f"{'Yeni personel' if create else 'Personel güncelleme'}\n{name}\nKart: {card}\n{'Aktif' if active else 'PASİF'}\n\nGeçmiş silinmez. Onaylıyor musunuz?", parent=self.root):
+        if not messagebox.askyesno('Personeli kaydet', f"{'Yeni personel' if create else 'Personel güncelleme'}\n{name}\nKart: eşleşti\n{'Aktif' if active else 'PASİF'}\n\nGeçmiş silinmez. Onaylıyor musunuz?", parent=self.root):
             return
         def work():
             reply = client.save_employee(state, uid, name, card, active, create)
@@ -739,22 +749,22 @@ class Manager:
                 person = next((p for p in state['employees'] if p['uid'] == target), None)
                 if person is None or person['inside']:
                     raise DeviceError('Personeli seçin; açık oturumu önce kapatın/kurtarın.')
-                detail = f'{person["name"]}\nSabit UID: {target}\nPersonel/kart kaldırılır; isimli geçmiş kayıtlar KALIR.'
+                detail = f'{person["name"]}\nPersonel/kart kaldırılır; isimli geçmiş kayıtlar KALIR.'
             else:
                 sequences = deletion_sequences(events, target)
                 selected = [event for event in events if event['sequence'] in sequences]
                 person = selected[0]
                 name = person.get('name') or next((p['name'] for p in state['employees'] if p['uid'] == person['uid']), person['uid'])
-                detail = (f'{name} · {person["uid"]}\nSilinecek sıra: {", ".join(map(str, sorted(sequences)))}\n' +
+                detail = (f'{name}\n' +
                     '\n'.join(f'{format_local_time(event["epoch"])} · {event["event"]}' for event in selected) +
-                    '\nGiriş/çıkış birlikte, M tek kayıt olarak kalıcı kaldırılır. Toplamlar yeniden hesaplanır.')
+                    '\nGiriş/çıkış birlikte, manuel kayıt tek kayıt olarak kalıcı kaldırılır. Toplamlar yeniden hesaplanır.')
         except (DeviceError, WorkforceError, ValueError) as exc:
             messagebox.showerror('Kalıcı silme', str(exc), parent=self.root)
             return
         if not messagebox.askyesno('GERİ ALINAMAZ — kalıcı silme', detail +
-                '\n\nCihaz, SD aynası ve bu PC arşivi güncellenir. Eski ZIP/CSV/PDF/Excel yedekleri kendiliğinden silinmez. Devam?', parent=self.root):
+                '\n\nCihaz ve bu bilgisayardaki arşiv güncellenir. Eski dışa aktarılmış yedek dosyaları kendiliğinden silinmez. Devam?', parent=self.root):
             return
-        phrase = f'SIL {target}'
+        phrase = 'KALICI SIL'
         answer = simpledialog.askstring('Son silme onayı', f'Onay için tam olarak yazın: {phrase}', parent=self.root)
         if answer != phrase or self.busy:
             return
@@ -782,7 +792,7 @@ class Manager:
         index=self.manual_choice.current()
         try:
             if not self.state or not self.state.get('manual_attendance'):
-                raise DeviceError('Manuel mesai için cihazı v1.1 firmware’e güncellemek gerekiyor.')
+                raise DeviceError('Manuel mesai için cihaz yazılımı güncel değil.')
             if not 0<=index<len(self.manual_uids):
                 raise DeviceError('Önce personeli seçin.')
             if not self.state.get('clock_ok'):
@@ -799,9 +809,9 @@ class Manager:
             messagebox.showerror('Manuel mesai',str(exc),parent=self.root)
             return
         state,client=copy.deepcopy(self.state),self.client
-        prompt=(employee['name']+' ['+uid+']\nBaşlangıç: '+start_text+'\nBitiş: '+end_text+
-                '\nEklenecek süre: '+duration(end-start)+'\n\nGeçmiş korunur, M yönetici kaydı eklenir.'+
-                '\nBu sürümde kaydı geri alma/silme yoktur. Kontrol edip onaylıyor musunuz?')
+        prompt=(employee['name']+'\nBaşlangıç: '+start_text+'\nBitiş: '+end_text+
+                '\nEklenecek süre: '+duration(end-start)+'\n\nGeçmiş korunur; manuel mesai kaydı eklenir.'+
+                '\nKontrol edip onaylıyor musunuz?')
         if not messagebox.askyesno('Manuel mesaiyi onayla',prompt,parent=self.root):
             return
         def work():
@@ -816,7 +826,7 @@ class Manager:
         self.refresh()
 
     def export_csv(self):
-        path = filedialog.asksaveasfilename(parent=self.root, title='Ham olay günlüğünü yedekle', defaultextension='.csv', initialfile='pdks-kayitlar.csv', filetypes=[('CSV', '*.csv')])
+        path = filedialog.asksaveasfilename(parent=self.root, title='Kayıtları dışa aktar', defaultextension='.csv', initialfile='pdks-kayitlar.csv', filetypes=[('Kayıt dosyası', '*.csv')])
         if not path:
             return
         def work():
@@ -838,14 +848,14 @@ class Manager:
         if recover:
             inside = [e['name'] for e in state['employees'] if e['inside']]
             prompt = ('Saat: ' + text + '\nİptal edilecek açık oturumlar: ' + (', '.join(inside) or 'Yok') +
-                      '\n\nTamamlanan süreler ve geçmiş korunur. Açık oturumlara süre eklenmez. R yönetici kaydı yazılır.\n' +
-                      'Yeni günlük/personel biçiminden sonra eski firmware’e dönülmez.\n\nOnaylamak için KURTAR yazın:')
+                      '\n\nTamamlanan süreler ve geçmiş korunur. Açık oturumlara süre eklenmez. Saat kurtarma kaydı yazılır.\n' +
+                      'Yeni kayıtlardan sonra eski yazılıma dönülmez.\n\nOnaylamak için KURTAR yazın:')
             if simpledialog.askstring('Yönetici saat kurtarma', prompt, parent=self.root) != 'KURTAR':
                 return
-            backup = filedialog.asksaveasfilename(parent=self.root, title='Kurtarmadan ÖNCE zorunlu CSV yedeği', defaultextension='.csv', initialfile='pdks-kurtarma-oncesi.csv', filetypes=[('CSV', '*.csv')])
+            backup = filedialog.asksaveasfilename(parent=self.root, title='Kurtarmadan önce yedek', defaultextension='.csv', initialfile='pdks-kurtarma-oncesi.csv', filetypes=[('Kayıt dosyası', '*.csv')])
             if not backup:
                 return
-        elif not messagebox.askyesno('Saat ayarı', f'Türkiye yerel saatini {text} olarak ayarla?\nAçık oturum/geriye saat koruması devam eder.', parent=self.root):
+        elif not messagebox.askyesno('Saat ayarı', f'Türkiye saatini {text} olarak ayarla?\nAçık oturum/geriye saat koruması devam eder.', parent=self.root):
             return
         def work():
             if recover:

@@ -1,63 +1,56 @@
-# İmzalı uygulama ve firmware güncellemesi
+# Uygulama ve cihaz yazılımı güncellemesi
 
 ## Windows programı
 
-1. İlk geçişte GitHub Releases'ten yeni `PDKS_Yonetim.exe` dosyasını indirin.
-   Eski programı kapatın; yenisini aynı konuma koyup çalıştırın. İlk manuel geçişte
-   kalan eski dosyayı kendiniz silebilirsiniz; sonraki otomatik güncellemelerde
-   geçici eski EXE kendiliğinden silinir.
-2. Sonraki sürümlerde **Güncelleme → Sürümleri kontrol et** seçin.
-3. **Dosyaları indir / hazırla** dosyaları doğrular; hiçbir şey kurmaz.
-4. **Windows programını güncelle** ayrıca onay ister. Kaydedilmemiş formları tamamlayın.
-   Program kapanır; ayrı yardımcı eski işlemin kapanmasını doğrular, eski EXE'yi
-   yalnız sağlık kontrolü boyunca geçici tutar ve atomik değiştirme yapar.
-   Yeni EXE'nin izole sağlık kontrolü başarısızsa önceki EXE geri alınır.
-   Sağlık kontrolü başarılıysa geçici eski EXE silinir; eski sürüm geride bırakılmaz.
+1. İlk geçişte yeni `PDKS_Yonetim.exe` dosyasını indirin. Eski programı kapatın;
+   yenisini aynı konuma koyup çalıştırın. İlk manuel geçişte kalan eski dosyayı
+   kendiniz silebilirsiniz; sonraki otomatik güncellemelerde geçici eski program
+   dosyası kendiliğinden silinir.
+2. Sonraki sürümlerde **Güncelleme → Güncellemeleri kontrol et** seçin.
+3. **Güncellemeyi indir** dosyayı doğrular; hiçbir şey kurmaz.
+4. **Programı güncelle…** ayrıca onay ister. Kaydedilmemiş formları tamamlayın.
+   Program kapanır; ayrı yardımcı eski işlemin kapanmasını doğrular, eski sürümü
+   yalnız sağlık kontrolü boyunca geçici tutar ve yeni sürümü atomik olarak koyar.
+   Yeni sürüm açılmazsa önceki sürüm geri alınır. Sağlık kontrolü başarılıysa geçici
+   eski sürüm silinir; eski sürüm geride bırakılmaz.
 
 Korumalı/izin verilmeyen klasörde işlem reddedilebilir; yönetici yetkisi kendiliğinden
-istenmez. Otomatik temizlik yalnız `PDKS_Yonetim.previous.<kimlik>.exe`/`.tmp`
-dosyalarını ve eski güncelleme iş klasörlerini siler; başka dosyalara dokunmaz.
-PC arşivi ve bağlantı ayarları değiştirilmez. Yalnız geri alma da başarısız olursa
-eski EXE yedeği manuel kurtarma için kalabilir; güncelleme iş klasöründeki
-`update.log` incelenir.
+istenmez. Otomatik temizlik yalnız eski geçici sürüm dosyalarını ve başarılı güncelleme
+iş klasörlerini siler; başka dosyalara dokunmaz. PC arşivi ve bağlantı ayarları
+değiştirilmez. Yalnız geri alma da başarısız olursa eski sürüm yedeği manuel kurtarma
+için kalabilir; güncelleme iş klasöründeki `update.log` incelenir.
 
-## İlk OTA kurulumu — bir kez USB
+## İlk cihaz yazılımı kurulumu — bir kez USB
 
-Eski cihaz firmware'i kablosuz imzalı yükleme kabul etmez. İlk geçiş, mevcut cihaza
-uygun **özel** `1.5.0` USB bootstrap firmware'i ve açık yükleme onayı gerektirir.
-Bu imaj yerel cihaz/parola bilgilerini içerebilir; GitHub'a veya başkasına gönderilmez.
-Normal program alanı güncellenir; dosya sistemi silinmez veya yüklenmez.
+Eski cihaz yazılımı kablosuz güncelleme kabul etmez. İlk geçiş, cihaza uygun **özel**
+USB kurulum yazılımı ve ayrıca açık yükleme onayı gerektirir. Bu özel yazılım yerel
+cihaz/parola bilgilerini içerebilir; GitHub'a veya başkasına gönderilmez. Mevcut
+yönetim bilgileri cihazda korunur. Normal cihaz yazılımı alanı güncellenir; kayıtlar
+silinmez.
 
-İlk özel açılış mevcut kullanıcı/AP bilgilerini özel `/device-auth.json` dosyasına
-geçirir; mevcut geçerli dosyayı değiştirmez. Hatalı dosya varsa varsayılanlara dönmez.
-Bu dosya yoksa herkese açık firmware yönetim erişimini kapalı tutar.
-USB kurulumu öncesi güncel kayıt dışa aktarımı/yedek ve doğru hedef kontrolü zorunludur.
-Yeni kayıt biçimleri kullanıldıktan sonra eski firmware'e dönmeyin.
+USB kurulumundan önce güncel kayıt dışa aktarımı/yedek ve doğru cihaz/hedef kontrolü
+zorunludur. Yeni kayıt biçimleri kullanıldıktan sonra eski cihaz yazılımına dönmeyin.
 
-## Sonraki kablosuz firmware güncellemeleri
+## Sonraki kablosuz cihaz yazılımı güncellemeleri
 
-1. İnternet varken sürümü kontrol edip dosyaları indirin.
-2. Programı açık tutup cihazla aynı güvenilir Wi-Fi/LAN'a bağlanın.
-   Cihazın kurulum AP'sinde internet olmayabilir.
+1. İnternet varken **Güncellemeleri kontrol et** ve **Güncellemeyi indir** seçin.
+2. Programı açık tutup cihazla aynı güvenilir Wi-Fi/LAN'a bağlanın. Cihazın kurulum
+   ağında internet olmayabilir.
 3. Bağlanın, **Yenile** ile güncel durumu okuyun. Açık mesai oturumu bulunmamalıdır.
-4. **Cihaz firmware'ini kablosuz güncelle** seçin ve ayrı onay verin.
-5. Program önce tutarlı durum/günlük kopyasını PC arşivine alır ve seçtiğiniz ZIP'e
-   yedekler. Bu adım başarısızsa firmware gönderilmez.
-6. İmzalı dosya bir kez gönderilir. Cihaz hedefi, sürümü, mevcut kayıt sürümlerini,
-   nonce/CSRF/onayı, tam boyutu, özeti ve imzayı kontrol eder. Doğrulama tamamlanmadan
-   yeni firmware etkinleştirilmez. Yükleme sırasında kart okumaları durur.
-7. Cihaz yeniden başlayınca **Yenile** ile firmware sürümünü kontrol edin.
-   Elektriği kesmeyin. Belirsiz yanıt durumunda körlemesine yeniden yüklemeyin.
+4. **Cihaz yazılımını güncelle…** seçin ve ayrı onay verin.
+5. Program önce tutarlı durum/günlük kopyasını PC arşivine alır ve seçtiğiniz yedeğe
+   yazar. Bu adım başarısızsa cihaz yazılımı gönderilmez.
+6. Yeni yazılım bir kez gönderilir. Cihaz hedefi, sürümü, mevcut kayıt durumunu,
+   onayı, tam boyutu, özeti ve imzayı kontrol eder. Doğrulama tamamlanmadan yeni
+   yazılım etkinleştirilmez. Yükleme sırasında kart okumaları durur.
+7. Cihaz yeniden başlayınca **Yenile** ile sürümü kontrol edin. Elektriği kesmeyin.
+   Sonuç belirsizse körlemesine yeniden yüklemeyin.
 
-Yalnız uygulama/program alanı (`U_FLASH`) güncellenir; LittleFS, Wi-Fi, kimlik bilgileri,
-personel ve günlük dosyaları korunur. PC ZIP yedeği cihazın tam flash/dosya sistemi
-yedeği değildir ve cihaza geri yükleme özelliği yoktur. OTA için port yönlendirmesi açmayın.
+Yalnız cihaz yazılımı alanı güncellenir; kayıtlar, Wi-Fi, kimlik bilgileri ve diğer
+dosyalar korunur. PC yedeği cihazın tam flash/dosya sistemi yedeği değildir ve cihaza
+geri yükleme özelliği yoktur. Güncelleme için port yönlendirmesi açmayın.
 
-## İmza protokolü
-
-Depo: `kaanekr/pdks-yonetim`. Sürüm kataloğu tam baytları üzerinden imzalanır:
-`update-manifest.json` + ham 256 bayt `update-manifest.sig`.
-Varlıklar `PDKS_Yonetim.exe` ve `PDKS_Firmware_TX_SD.signed.bin` dosyalarıdır.
-Firmware: ham BIN + RSA-2048 PKCS1v15/SHA256 imza + little-endian uint32(256).
-Firmware metaverisi ayrıca hedef/sürüm/sıra/boyut/SHA256 alanlarına bağlanan imza taşır.
-Güven anahtarı uygulama ve firmware'e gömülüdür; GitHub erişim anahtarı gerekmez.
+Cihazın web paneli yeni sürümlerde cihaz yazılımının içinde gelir; kablosuz güncelleme
+ile birlikte yenilenir ve kayıt alanına ayrıca dosya yüklenmez. 1.5.4 Windows ve cihaz
+arayüzleri sadeleştirilmiştir; ham kart kimliği, olay sırası, sürüm/özet gibi teknik
+alanlar ana ekranlarda gösterilmez.

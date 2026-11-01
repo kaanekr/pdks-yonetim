@@ -119,7 +119,8 @@ class ReportsPanelTest(unittest.TestCase):
         self.assertEqual(widget.current_report['source'], 'arsiv-1')
         self.assertIn('arsiv-1', widget.meta_var.get())
         self.assertIn(SYNCED, widget.info_var.get())
-        self.assertIn('a' * 64, widget.info_var.get())
+        self.assertIn('aralık', widget.info_var.get())
+        self.assertNotIn('a' * 64, widget.info_var.get())
 
     def test_invalid_date_shows_error_without_engine(self):
         widget, events = self.panel()

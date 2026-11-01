@@ -22,6 +22,7 @@
 #include "FirmwareOta.h"
 #include "ReleaseVersion.h"
 #include "Network.h"
+#include "PublicPanel.h"
 #include "Storage.h"
 #include "WifiPage.h"
 
@@ -652,50 +653,12 @@ struct ChunkWriter {
   }
 };
 
-// Minimal in-firmware page, used only when /index.html is not on LittleFS.
-static const char FALLBACK_HTML[] PROGMEM = R"HTML(<!doctype html>
-<html lang="tr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PDKS Kurulum</title>
-<style>body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#141414;color:#eee;line-height:1.45}h1{font-size:19px}h2{font-size:15px;margin-top:20px}code{background:#262626;padding:1px 4px;border-radius:3px}#s{background:#1d2b1d;padding:10px;border-radius:6px}.w{color:#f2b36b}</style>
-</head><body>
-<h1>PDKS Kurulum Sayfasi</h1>
-<p class="w">Bu, cihazda arayuz dosyasi yokken gosterilen yedek sayfadir. Tam panel icin <code>data/index.html</code> yukleyin.</p>
-<p id="s">Durum yukleniyor...</p>
-<h2>Baglanti</h2>
-<p><a href="/wifi">Sirket Wi-Fi ayarlarini ac</a></p>
-<ul><li>Kendi Config.h / Secrets.h ayarlarinizdaki Wi-Fi ve panel bilgilerini kullanin.</li>
-<li>Panel: <code>http://192.168.4.1/</code></li></ul>
-<h2>Kurulum adimlari</h2>
-<ol><li>Telefon veya bilgisayardan AP'ye baglanin.</li>
-<li>Panele girip tarih/saati ayarlayin (RTC saati yalnizca panelden kurulur).</li>
-<li>Kart okutup UID ogrenin, calisan ekleyin.</li>
-<li>Ayni karti 5 saniye icinde tekrar okutmayin; yeniden okutmak icin once karti cekin.</li></ol>
-<h2>Bakim</h2>
-<ul><li>Kayitlar LittleFS icinde <code>/journal.log</code> olarak tutulur; otomatik silinmez veya kirpilmaz.</li>
-<li><code>pio run -t uploadfs</code> TUM calisan kayitlarini SILER. Yalnizca yedek aldiktan sonra kullanin.</li>
-<li>Dosya sistemi acilmazsa once veriyi koruyun. Bilincli ilk kurulumda seri porttan (115200) <code>FORMAT YES</code> yazilabilir; bu komut ulasilamayan eski veriyi de silebilir.</li>
-<li>Varsayilan AP ve panel sifresini mutlaka degistirin.</li></ul>
-<script>
-fetch('/api/status',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
-var t=d.clock_ok?new Date(d.now*1000).toISOString().slice(11,19):'--:--:--';
-document.getElementById('s').textContent='Saat '+t+' | Depolama '+(d.storage_ok?'OK':'HATA')+' | RFID '+(d.rfid_ok?'OK':'YOK')+' | OLED '+(d.oled_ok?'OK':'YOK')+' | Kayit no '+d.sequence;
-}).catch(function(){document.getElementById('s').textContent='Durum alinamadi.';});
-</script>
-</body></html>)HTML";
+
 
 static void handleIndex() {
   if (!requireAuth()) return;
   g_server.sendHeader("Cache-Control", "no-store");
-  if (storage::mounted() && LittleFS.exists(storage::INDEX_PATH)) {
-    File page = LittleFS.open(storage::INDEX_PATH, "r");
-    if (page) {
-      g_server.streamFile(page, "text/html");
-      page.close();
-      return;
-    }
-  }
-  g_server.send_P(200, "text/html", FALLBACK_HTML);
+  g_server.send_P(200, "text/html; charset=utf-8", PDKS_PANEL_HTML);
 }
 
 static void handleWifiPage() {
