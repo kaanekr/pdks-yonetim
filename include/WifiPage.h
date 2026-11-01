@@ -1,0 +1,28 @@
+#pragma once
+
+// Firmware-resident: updating network setup never needs uploadfs.
+static const char WIFI_HTML[] PROGMEM = R"HTML(<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDKS Wi-Fi Ayarlari</title><style>
+body{font-family:system-ui,sans-serif;max-width:620px;margin:24px auto;padding:16px;background:#141819;color:#edf4f1;line-height:1.5}h1{font-size:24px}section{background:#202729;padding:18px;border-radius:12px;margin:16px 0}label{display:block;margin:12px 0 5px}input:not([type=checkbox]){box-sizing:border-box;width:100%;font:inherit;padding:10px;border-radius:6px;border:1px solid #67746f;background:#111;color:#fff}button{font:inherit;padding:10px 14px;margin:14px 8px 0 0;border-radius:6px;border:0;cursor:pointer}button:disabled{opacity:.5}a{color:#8ee2ba}.muted{color:#c2ceca}#result{min-height:2em;white-space:pre-wrap}
+</style></head><body><h1>Wi-Fi ayarlari</h1>
+<p class="muted">Kurulum Wi-Fi agi sirket agina baglandiktan 5 dakika sonra kapanir. Sirket baglantisi koparsa yeniden acilir; ag ayarlanmamissa acik kalir. Kapanmadan once asagidaki sirket IP adresini not edin. Kart sistemi internet olmadan calisir. Yalniz 2,4 GHz WPA/WPA2 kisisel veya acik ag; kullanici adi/sertifika isteyen aglar desteklenmez.</p>
+<section><strong id="state">Durum aliniyor...</strong><p id="current"></p><p id="addresses"></p></section>
+<section><form id="wifi-form" method="post" action="/api/wifi" autocomplete="off"><label for="ssid">Sirket / modem ag adi (SSID)</label><input id="ssid" name="ssid" maxlength="32" required autocapitalize="none" spellcheck="false">
+<label for="password">Wi-Fi sifresi</label><input id="password" name="password" type="password" maxlength="64" autocomplete="new-password">
+<label><input id="open" type="checkbox"> Bu ag sifresiz (acik ag)</label>
+<p class="muted">Kayitli sifre ekrana geri gonderilmez. Ayari degistirirken sifreyi yeniden yazin. Kaydetme sonrasi kablosuz kanal degisebilir; kisa kesinti olursa kurulum agina yeniden baglanip bu sayfayi acin.</p>
+<button id="save" type="submit" disabled>Kaydet ve baglan</button><button id="forget" type="button" disabled>Kayitli sirket agini unut</button></form>
+<p id="result" role="status" aria-live="polite"></p></section>
+<p><a href="/">Personel / saat paneli</a> · <a href="/test">Ses testi</a></p>
+<p class="muted">Bu sayfa HTTP kullanir: yalniz guvendiginiz yerel agda acin; varsayilan kurulum/panel sifrelerini degistirin. Internet paylasimi veya router gorevi yapmaz.</p>
+<script>
+const byId=id=>document.getElementById(id);let csrf='',busy=false,loaded=false,configured=false;
+function controls(){byId('save').disabled=busy||!csrf;byId('forget').disabled=busy||!csrf||!configured;byId('password').disabled=busy||byId('open').checked;byId('ssid').disabled=busy;byId('open').disabled=busy;}
+async function refresh(){const r=await fetch('/api/wifi',{cache:'no-store',credentials:'same-origin'});if(!r.ok)throw new Error('Durum alinamadi: '+r.status);const d=await r.json();csrf=d.csrf||'';configured=d.configured;byId('state').textContent=d.state;byId('current').textContent=d.config_ok?(d.configured?'Kayitli ag: '+d.ssid:'Henuz bir sirket agi kaydedilmedi.'):'Kayitli ayar okunamadi. Yeni ayar kaydedebilirsiniz.';byId('addresses').textContent=(d.ap_active?'Kurulum paneli: http://'+d.ap_ip+'/wifi'+(d.connected?' ('+d.ap_seconds_left+' sn sonra kapanir)':' (kurulum agi acik)'):'Kurulum Wi-Fi agi kapali')+(d.connected?' | Sirket agindaki panel: http://'+d.station_ip+'/':'');if(!loaded){byId('ssid').value=d.ssid||'';loaded=true;}controls();}
+async function post(path,body){await refresh();if(!csrf)throw new Error('Guvenlik anahtari yok');const r=await fetch(path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.message||'Islem reddedildi');return d;}
+byId('open').addEventListener('change',()=>{if(byId('open').checked)byId('password').value='';controls();});
+byId('wifi-form').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;const ssid=byId('ssid').value,password=byId('open').checked?'':byId('password').value;const bytes=new TextEncoder().encode(ssid).length;if(!bytes||bytes>32){byId('result').textContent='Ag adi 1-32 bayt olmali.';return;}if(!byId('open').checked&&!((password.length>=8&&password.length<=63&&/^[\x20-\x7e]+$/.test(password))||/^[0-9a-fA-F]{64}$/.test(password))){byId('result').textContent='Sifre 8-63 ASCII karakter veya 64 hex olmali.';return;}busy=true;controls();try{const d=await post('/api/wifi',{v:1,enabled:true,ssid,password});byId('password').value='';byId('result').textContent=d.message+' Baglanti durumunu asagidaki sayfa yenilemeleri gosterir.';}catch(err){byId('result').textContent=err.message+' Sonuc belirsizse tekrar kaydetmeden once durumu kontrol edin.';}finally{busy=false;controls();}});
+byId('forget').addEventListener('click',async()=>{if(busy||!confirm('Yalniz kayitli sirket Wi-Fi ayari unutulsun mu? Personel/kayitlar silinmez.'))return;busy=true;controls();try{const d=await post('/api/wifi/forget',{});byId('ssid').value='';byId('password').value='';byId('open').checked=false;byId('result').textContent=d.message;}catch(err){byId('result').textContent=err.message;}finally{busy=false;controls();}});
+refresh().catch(e=>{csrf='';controls();byId('result').textContent=e.message;});setInterval(()=>refresh().catch(()=>{csrf='';controls();byId('state').textContent='Cihaza ulasilamiyor. Kurulum agi kapanmissa sirket agindaki IP adresini acin.';}),3000);
+</script></body></html>)HTML";
