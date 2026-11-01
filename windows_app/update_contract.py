@@ -8,8 +8,8 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-CURRENT_VERSION = '1.5.4'
-CURRENT_SEQUENCE = 10504
+CURRENT_VERSION = '1.5.5'
+CURRENT_SEQUENCE = 10505
 REPOSITORY = 'kaanekr/pdks-yonetim'
 FIRMWARE_TARGET = 'nodemcuv2_sd_soft_tx'
 PUBLIC_KEY = Path(__file__).resolve().parent/'assets/update_public_key.pem'
