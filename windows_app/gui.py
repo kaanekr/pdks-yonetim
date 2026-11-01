@@ -57,130 +57,227 @@ class Manager:
             self.archive_open_warning = 'Yerel arşiv açılamadı. Bu oturumdaki yeni veriler geçici; eski arşiv sıfırlanmadı.'
             self.archive_warning.set(self.archive_open_warning)
         root.title('PDKS Yönetim' + (' — DEMO' if demo else ''))
-        height = max(680, min(850, root.winfo_screenheight() - 100))
+        height = max(700, min(860, root.winfo_screenheight() - 100))
         root.geometry(f'1280x{height}')
-        root.minsize(1100, 680)
-        root.configure(bg='#eef2f6')
+        root.minsize(1120, 700)
+        root.configure(bg='#eef2f5')
         style = ttk.Style(root)
         style.theme_use('clam')
-        style.configure('.', font=('Segoe UI', 10))
-        style.configure('TFrame', background='#eef2f6')
-        style.configure('TLabel', background='#eef2f6')
-        style.configure('Title.TLabel', font=('Segoe UI', 20, 'bold'), foreground='#17324d')
-        style.configure('Treeview', rowheight=29, background='white', fieldbackground='white')
-        style.configure('Treeview.Heading', font=('Segoe UI', 10, 'bold'))
-        style.configure('TButton', padding=(12, 7))
+        style.configure('.', font=('Segoe UI', 10), background='#eef2f5', foreground='#16232d')
+        style.configure('TFrame', background='#eef2f5')
+        style.configure('TLabel', background='#eef2f5', foreground='#16232d')
+        style.configure('Muted.TLabel', foreground='#5b6b78')
+        style.configure('Field.TLabel', font=('Segoe UI', 9), foreground='#5b6b78')
+        style.configure('Title.TLabel', font=('Segoe UI', 23, 'bold'), foreground='#17324d')
+        style.configure('Subtitle.TLabel', font=('Segoe UI', 10), foreground='#5b6b78')
+        style.configure('Section.TLabel', font=('Segoe UI', 14, 'bold'), foreground='#17324d')
+        style.configure('Card.TLabelframe', background='#eef2f5', bordercolor='#d9e1e7', relief='solid')
+        style.configure('Card.TLabelframe.Label', background='#eef2f5', foreground='#17324d',
+                        font=('Segoe UI', 10, 'bold'))
+        style.configure('TNotebook', background='#eef2f5', borderwidth=0, tabmargins=(0, 4, 0, 0))
+        style.configure('TNotebook.Tab', padding=(16, 8), font=('Segoe UI', 10),
+                        background='#e3eaf0', foreground='#304c64')
+        style.map('TNotebook.Tab', background=[('selected', '#ffffff')],
+                  foreground=[('selected', '#0b5fbf')])
+        style.configure('Treeview', rowheight=32, background='#ffffff', fieldbackground='#ffffff',
+                        foreground='#16232d', borderwidth=0)
+        style.configure('Treeview.Heading', font=('Segoe UI', 10, 'bold'), background='#e8eef4',
+                        foreground='#17324d', padding=(8, 8), relief='flat')
+        style.map('Treeview.Heading', background=[('active', '#dce7f1')])
+        style.map('Treeview', background=[('selected', '#cfe3ff')],
+                  foreground=[('selected', '#16232d')])
+        style.configure('TButton', padding=(14, 8))
+        style.configure('Primary.TButton', font=('Segoe UI', 10, 'bold'), padding=(18, 9),
+                        background='#0b5fbf', foreground='#ffffff')
+        style.map('Primary.TButton',
+                  background=[('disabled', '#a9bccd'), ('pressed', '#084f9f'), ('active', '#0a55ab')],
+                  foreground=[('disabled', '#f4f8fb'), ('!disabled', '#ffffff')])
+        style.configure('Danger.TButton', foreground='#a4261f')
+        style.map('Danger.TButton', background=[('active', '#fdeceb')])
+        style.configure('TEntry', padding=6, fieldbackground='#ffffff')
+        style.configure('TCombobox', padding=4)
+        style.configure('TCheckbutton', background='#eef2f5')
         base = ttk.Frame(root, padding=18)
         base.pack(fill='both', expand=True)
-        ttk.Label(base, text='PDKS Yönetim', style='Title.TLabel').pack(anchor='w')
-        ttk.Label(base, text='Puantaj • vardiya ve izinler • raporlar • yerel arşiv • cihaz yönetimi').pack(anchor='w', pady=(2, 12))
+        header = ttk.Frame(base)
+        header.pack(fill='x', pady=(0, 12))
+        title_area = ttk.Frame(header)
+        title_area.pack(side='left', fill='x', expand=True)
+        ttk.Label(title_area, text='PDKS Yönetim', style='Title.TLabel').pack(anchor='w')
+        ttk.Label(title_area, text='Personel, mesai ve puantaj yönetimi',
+                  style='Subtitle.TLabel').pack(anchor='w', pady=(1, 0))
         if demo:
-            ttk.Label(base, text='DEMO: yalnız geçici örnek veriler; fiziksel cihaza bağlantı YOK.', foreground='#a54200').pack(anchor='w')
-        connect = ttk.Frame(base)
-        connect.pack(fill='x', pady=(4, 10))
+            ttk.Label(title_area, text='DEMO: yalnız geçici örnek veriler; fiziksel cihaza bağlantı yok.',
+                      foreground='#a54200').pack(anchor='w', pady=(4, 0))
+        connect_box = ttk.LabelFrame(base, text='Cihaz bağlantısı', style='Card.TLabelframe',
+                                     padding=(14, 8))
+        connect_box.pack(fill='x', pady=(0, 10))
+        connect = ttk.Frame(connect_box)
+        connect.pack(fill='x')
         self.address = tk.StringVar(value='192.168.4.1')
         self.username = tk.StringVar(value='admin')
         self.password = tk.StringVar()
         self.remember = tk.BooleanVar(value=True)
         self.connection_entries = []
-        for label, variable, width, show in (('Cihaz IP', self.address, 24, ''), ('Kullanıcı', self.username, 12, ''), ('Şifre', self.password, 20, '•')):
-            ttk.Label(connect, text=label).pack(side='left', padx=(0, 5))
+        for index, (label, variable, width, show) in enumerate((
+                ('Cihaz IP', self.address, 20, ''),
+                ('Kullanıcı', self.username, 12, ''),
+                ('Şifre', self.password, 16, '•'))):
+            column = index * 2
+            ttk.Label(connect, text=label, style='Field.TLabel').grid(
+                row=0, column=column, sticky='w', padx=(0, 4))
             entry = ttk.Entry(connect, textvariable=variable, width=width, show=show)
-            entry.pack(side='left', padx=(0, 10))
+            entry.grid(row=0, column=column + 1, sticky='w', padx=(0, 14))
             self.connection_entries.append(entry)
-        self.connect_btn = ttk.Button(connect, text='Bağlan', command=self.connect)
+        connect.columnconfigure(7, weight=1)
+        connect_actions = ttk.Frame(connect)
+        connect_actions.grid(row=0, column=6, sticky='w', padx=(4, 0))
+        self.connect_btn = ttk.Button(connect_actions, text='Bağlan', command=self.connect,
+                                      style='Primary.TButton')
         self.connect_btn.pack(side='left')
-        self._button(connect, 'Yenile', self.refresh).pack(side='left', padx=6)
-        memory = ttk.Frame(base)
-        memory.pack(fill='x', pady=(0, 8))
-        self.remember_check = ttk.Checkbutton(memory, text='Şifreyi hatırla', variable=self.remember, command=self._remember_changed)
+        self._button(connect_actions, 'Yenile', self.refresh).pack(side='left', padx=(8, 0))
+        ttk.Label(connect, text='Cihazla aynı yerel ağda olun.', style='Muted.TLabel').grid(
+            row=0, column=7, sticky='w', padx=(16, 0))
+        memory = ttk.Frame(connect_box)
+        memory.pack(fill='x', pady=(6, 0))
+        self.remember_check = ttk.Checkbutton(memory, text='Şifreyi hatırla', variable=self.remember,
+                                              command=self._remember_changed)
         self.remember_check.pack(side='left')
-        ttk.Label(memory, text='IP ve kullanıcı hatırlanır. Şifre Windows kasasında saklanır; otomatik bağlantı yok.').pack(side='left', padx=10)
+        ttk.Label(memory, text='IP ve kullanıcı hatırlanır. Şifre Windows kasasında saklanır; otomatik bağlantı yok.',
+                  style='Muted.TLabel').pack(side='left', padx=10)
         self.status_text = tk.StringVar(value='Cihaz bağlı değil.')
-        ttk.Label(base, textvariable=self.status_text, wraplength=1020, foreground='#304c64').pack(fill='x', pady=(0, 10))
+        self.status_label = tk.Label(base, textvariable=self.status_text, anchor='w', bg='#ffffff',
+                                     fg='#5b6b78', padx=12, pady=8,
+                                     highlightbackground='#d9e1e7', highlightthickness=1)
+        self.status_label.pack(fill='x', pady=(0, 10))
         tabs = ttk.Notebook(base)
         tabs.pack(fill='both', expand=True)
-        overview, reports, planning = (ttk.Frame(tabs, padding=10) for _ in range(3))
-        tabs.add(overview, text='Genel Bakış')
-        tabs.add(reports, text='Puantaj / Rapor')
-        tabs.add(planning, text='Vardiya / Takvim')
+        self.tabs = tabs
+        overview = ttk.Frame(tabs, padding=14)
+        people = ttk.Frame(tabs, padding=14)
+        records = ttk.Frame(tabs, padding=14)
+        manual = ttk.Frame(tabs, padding=14)
+        clock = ttk.Frame(tabs, padding=14)
+        reports = ttk.Frame(tabs)
+        planning = ttk.Frame(tabs)
+        update_tab = ttk.Frame(tabs, padding=14)
+        for frame, title in ((overview, 'Genel Bakış'), (people, 'Personel'),
+                             (records, 'Kayıtlar'), (manual, 'Manuel Mesai'),
+                             (clock, 'Saat'), (reports, 'Puantaj'),
+                             (planning, 'Vardiya'), (update_tab, 'Güncelleme')):
+            tabs.add(frame, text=title)
         self.planning_panel = PlanningPanel(planning, self.archive, on_change=self._policy_changed)
         self.planning_panel.pack(fill='both', expand=True)
         self.reports_panel = ReportsPanel(reports, self.archive, on_source_change=self._offline_source_changed)
         self.reports_panel.pack(fill='both', expand=True)
         self.reports_panel.update_sources()
         self._build_overview(overview)
-        people, records, manual, clock = (ttk.Frame(tabs, padding=12) for _ in range(4))
-        tabs.add(people, text='  Personel / Kartlar  ')
-        tabs.add(records, text='  Giriş / Çıkış Kayıtları  ')
-        tabs.add(manual, text='  Manuel Mesai  ')
-        tabs.add(clock, text='  Saat ve Kurtarma  ')
+        people_header = ttk.Frame(people)
+        people_header.pack(fill='x')
+        ttk.Label(people_header, text='Personel ve kartlar', style='Section.TLabel').pack(side='left')
+        self.delete_person_button = self._button(people_header, 'Seçili personeli kalıcı sil…',
+                                                 self.delete_person, style='Danger.TButton')
+        self.delete_person_button.pack(side='right', pady=(4, 0))
+        ttk.Label(people, text='Kartı okutun, son kartı forma alın ve adı kaydedin. Geçmiş kayıtlar korunur.',
+                  style='Muted.TLabel', wraplength=1050).pack(anchor='w', pady=(2, 10))
         self.people = self._tree(people, ('Ad', 'Kart UID', 'Durum', 'İçeride', 'Tamamlanan süre'), (230, 180, 90, 80, 130))
-        self.people.configure(displaycolumns=('Ad', 'Durum', 'İçeride', 'Tamamlanan süre'))
+        self.people.configure(displaycolumns=('Ad', 'Durum', 'İçeride', 'Tamamlanan süre'), height=4)
         self.people.bind('<<TreeviewSelect>>', self.on_select)
-        editor = ttk.Frame(people)
-        editor.pack(side='bottom', fill='x', before=self.people.master)
+        editor = ttk.LabelFrame(people, text='Personel bilgisi', style='Card.TLabelframe', padding=(12, 6))
+        editor.pack(side='bottom', fill='x', before=self.people.master, pady=(8, 0))
         form = ttk.Frame(editor)
-        form.pack(fill='x', pady=12)
+        form.pack(fill='x')
+        form.columnconfigure(0, weight=1)
         self.name, self.card, self.active = tk.StringVar(), tk.StringVar(), tk.BooleanVar(value=True)
         self.card_status = tk.StringVar(value='Kart: okutun veya son kartı kullanın.')
         self.card.trace_add('write', lambda *_: self._card_changed())
-        ttk.Label(form, text='Ad soyad').grid(row=0, column=0, sticky='w')
-        ttk.Entry(form, textvariable=self.name, width=32).grid(row=1, column=0, sticky='ew')
+        ttk.Label(form, text='Ad soyad', style='Field.TLabel').grid(row=0, column=0, sticky='w')
+        ttk.Entry(form, textvariable=self.name, width=32).grid(row=1, column=0, sticky='ew', pady=(2, 0))
         self.active_check = ttk.Checkbutton(form, text='Aktif', variable=self.active)
         self.active_check.grid(row=1, column=1, padx=12)
-        self._button(form, 'Yeni personel', self.new_person).grid(row=1, column=2, padx=8)
-        self._button(form, 'Kaydet', self.save_person).grid(row=1, column=3)
+        self._button(form, 'Son okutulan kartı kullan', self.use_last_card).grid(
+            row=1, column=2, padx=(8, 0))
+        self._button(form, 'Yeni personel', self.new_person).grid(row=1, column=3, padx=8)
+        self._button(form, 'Kaydet', self.save_person, style='Primary.TButton').grid(row=1, column=4)
         self.identity_text = tk.StringVar(value='Yeni personel: adı girin; kartı okutup “Son okutulan kartı kullan” seçin.')
-        ttk.Label(editor, textvariable=self.identity_text, wraplength=960).pack(anchor='w')
-        ttk.Label(editor, textvariable=self.card_status, foreground='#304c64').pack(anchor='w', pady=(6, 0))
-        self._button(editor, 'Son okutulan kartı kullan', self.use_last_card).pack(anchor='w', pady=8)
-        self.delete_person_button = self._button(editor, 'Seçili personeli kalıcı sil…', self.delete_person)
-        self.delete_person_button.pack(anchor='w', pady=4)
-        ttk.Label(editor, text='Personeli silmek kartı/personel kaydını kaldırır; isimli geçmiş korunur. Açık oturum önce kapatılmalı/kurtarılmalı.', wraplength=960).pack(anchor='w')
+        meta = ttk.Frame(editor)
+        meta.pack(fill='x', pady=(6, 0))
+        ttk.Label(meta, textvariable=self.identity_text, style='Muted.TLabel').pack(side='left')
+        ttk.Label(meta, textvariable=self.card_status, foreground='#304c64').pack(side='right')
+        ttk.Label(records, text='Giriş / çıkış kayıtları', style='Section.TLabel').pack(anchor='w')
+        ttk.Label(records, text='Manuel mesai ve saat kurtarma kayıtları ayrı gösterilir. Eski kayıtlarda ad sonradan eşleştirilebilir.',
+                  style='Muted.TLabel', wraplength=1050).pack(anchor='w', pady=(2, 10))
         bar = ttk.Frame(records)
         bar.pack(fill='x', pady=(0, 10))
-        self._button(bar, 'Kayıtları getir', self.load_events).pack(side='left')
+        self._button(bar, 'Kayıtları getir', self.load_events, style='Primary.TButton').pack(side='left')
         self._button(bar, 'Kayıtları dışa aktar', self.export_csv).pack(side='left', padx=8)
-        self.delete_session_button = self._button(bar, 'Seçili oturumu kalıcı sil…', self.delete_session)
-        self.delete_session_button.pack(side='left', padx=8)
+        self.delete_session_button = self._button(bar, 'Seçili oturumu kalıcı sil…',
+                                                  self.delete_session, style='Danger.TButton')
+        self.delete_session_button.pack(side='right')
         self.events_tree = self._tree(records, ('Sıra', 'Cihaz yerel tarih/saat', 'Sabit personel UID', 'İşlem', 'Süre / açıklama',
                 'Kayıttaki ad', 'Adın kaynağı', 'Silinmiş personel'), (55, 175, 155, 270, 250, 220, 190, 140))
         self.events_tree.configure(displaycolumns=('Cihaz yerel tarih/saat', 'Kayıttaki ad', 'İşlem',
-                'Süre / açıklama'))
-        ttk.Label(records, text='Manuel mesai ve saat kurtarma kayıtları ayrı gösterilir. Eski kayıtlarda ad sonradan eşleştirilebilir; tarihsel ad olduğu varsayılmaz.', wraplength=1100).pack(anchor='w', pady=8)
-        ttk.Label(manual,text='Geçmiş tarihli tamamlanmış mesai ekle',font=('Segoe UI',13,'bold')).pack(anchor='w',pady=(0,12))
-        ttk.Label(manual,text='Personel').pack(anchor='w')
-        self.manual_choice=ttk.Combobox(manual,state='readonly',width=62)
-        self.manual_choice.pack(anchor='w',pady=(3,12))
-        self.manual_uids=[]
-        now=turkey_now()
-        self.manual_start=tk.StringVar(value=format_local_time(encode_local_time(now)-3600))
-        self.manual_end=tk.StringVar(value=now)
-        for label,variable in (('Başlangıç — Türkiye yerel tarih/saat',self.manual_start),('Bitiş — Türkiye yerel tarih/saat',self.manual_end)):
-            ttk.Label(manual,text=label).pack(anchor='w')
-            ttk.Entry(manual,textvariable=variable,width=28,font=('Segoe UI',12)).pack(anchor='w',pady=(3,12))
-        self.manual_button=self._button(manual,'Manuel mesaiyi ekle…',self.add_manual)
-        self.manual_button.pack(anchor='w',pady=8)
-        ttk.Label(manual,text='Biçim: YYYY-AA-GG SS:DD:SN. Süre başlangıç/bitişten hesaplanır. Cihaz saati doğru olmalı; gelecekteki bitiş ve açık oturumu olan kişi reddedilir.',wraplength=880).pack(anchor='w',pady=8)
-        ttk.Label(manual,text='Çakışan mesai tekrar eklenmez. Yanlış tamamlanmış M kaydı, yeni cihaz yazılımıyla Giriş / Çıkış Kayıtları bölümünden açık onayla silinebilir.',foreground='#a23e20',wraplength=880).pack(anchor='w',pady=8)
-        ttk.Label(manual,text='Manuel mesai için cihaz yönetim yazılımı gerekir. Program cihaza kendiliğinden yazılım yüklemez.',wraplength=880).pack(anchor='w')
-        ttk.Label(clock, text='Türkiye saati', font=('Segoe UI', 12, 'bold')).pack(anchor='w')
+                'Süre / açıklama'), height=4)
+        ttk.Label(records, text='Tarihsel ad sonradan değiştirilmiş olabilir; kayıt anındaki adı esas alın.',
+                  style='Muted.TLabel', wraplength=1100).pack(anchor='w', pady=8)
+        ttk.Label(manual, text='Manuel mesai', style='Section.TLabel').pack(anchor='w')
+        ttk.Label(manual, text='Geçmiş tarihli tamamlanmış mesaiyi personel adıyla ekleyin.',
+                  style='Muted.TLabel').pack(anchor='w', pady=(2, 10))
+        manual_form = ttk.LabelFrame(manual, text='Mesai bilgileri', style='Card.TLabelframe',
+                                     padding=(12, 8))
+        manual_form.pack(fill='x')
+        ttk.Label(manual_form, text='Personel', style='Field.TLabel').pack(anchor='w')
+        self.manual_choice = ttk.Combobox(manual_form, state='readonly', width=62)
+        self.manual_choice.pack(fill='x', pady=(2, 8))
+        self.manual_uids = []
+        now = turkey_now()
+        self.manual_start = tk.StringVar(value=format_local_time(encode_local_time(now) - 3600))
+        self.manual_end = tk.StringVar(value=now)
+        dates = ttk.Frame(manual_form)
+        dates.pack(fill='x')
+        for column, (label, variable) in enumerate((
+                ('Başlangıç (Türkiye saati)', self.manual_start),
+                ('Bitiş (Türkiye saati)', self.manual_end))):
+            cell = ttk.Frame(dates)
+            cell.grid(row=0, column=column, sticky='ew', padx=(0, 12))
+            dates.columnconfigure(column, weight=1)
+            ttk.Label(cell, text=label, style='Field.TLabel').pack(anchor='w')
+            ttk.Entry(cell, textvariable=variable, width=28,
+                      font=('Segoe UI', 11)).pack(fill='x', pady=(2, 0))
+        self.manual_button = self._button(manual_form, 'Manuel mesaiyi ekle…', self.add_manual,
+                                          style='Primary.TButton')
+        self.manual_button.pack(anchor='w', pady=(10, 0))
+        ttk.Label(manual, text='Biçim: YYYY-AA-GG SS:DD:SN. Süre başlangıç/bitişten hesaplanır. Cihaz saati doğru olmalı; gelecekteki bitiş ve açık oturumu olan kişi reddedilir.',
+                  style='Muted.TLabel', wraplength=1000).pack(anchor='w', pady=(10, 4))
+        ttk.Label(manual, text='Çakışan mesai tekrar eklenmez. Yanlış tamamlanmış M kaydı, Kayıtlar bölümünden açık onayla silinebilir.',
+                  foreground='#a23e20', wraplength=1000).pack(anchor='w', pady=4)
+        ttk.Label(manual, text='Manuel mesai için cihaz yönetim yazılımı gerekir. Program cihaza kendiliğinden yazılım yüklemez.',
+                  style='Muted.TLabel', wraplength=1000).pack(anchor='w')
+        ttk.Label(clock, text='Saat ve kurtarma', style='Section.TLabel').pack(anchor='w')
+        ttk.Label(clock, text='Cihaz saati Türkiye yerel saatidir. Önce normal saat ayarını deneyin.',
+                  style='Muted.TLabel').pack(anchor='w', pady=(2, 10))
+        clock_form = ttk.LabelFrame(clock, text='Cihaz saati', style='Card.TLabelframe', padding=(12, 8))
+        clock_form.pack(fill='x')
         self.time = tk.StringVar(value=turkey_now())
-        timebar = ttk.Frame(clock)
-        timebar.pack(fill='x', pady=12)
-        ttk.Entry(timebar, textvariable=self.time, width=26, font=('Segoe UI', 13)).pack(side='left')
-        ttk.Button(timebar, text='Şu anki Türkiye saati', command=lambda: self.time.set(turkey_now())).pack(side='left', padx=10)
-        self._button(clock, 'Normal saat ayarla', lambda: self.set_time(False)).pack(anchor='w')
-        ttk.Label(clock, text='Normal işlem açık oturumda ve geriye saat almada reddedilir. Saat bozulup kilitlendiğinde aşağıdaki yönetici kurtarmasını kullanın.', wraplength=880).pack(anchor='w', pady=12)
-        self._button(clock, 'Açık oturumları iptal et ve saati kurtar…', lambda: self.set_time(True)).pack(anchor='w')
-        ttk.Label(clock, text='Kurtarma: geçmişi ve tamamlanan toplamları korur; TÜM açık oturumları süre eklemeden iptal eder. Yeniden onay ister; otomatik tekrarlanmaz.', foreground='#a23e20', wraplength=880).pack(anchor='w', pady=12)
-        ttk.Label(clock, text='Cihaz yazılımı güncel değilse saat kurtarma için Güncelleme sekmesini kullanın. Yeni kayıtlardan sonra eski sürüme dönmeyin.', wraplength=880).pack(anchor='w', pady=8)
-        update_tab = ttk.Frame(tabs, padding=12)
-        tabs.add(update_tab, text='Güncelleme')
+        timebar = ttk.Frame(clock_form)
+        timebar.pack(fill='x')
+        ttk.Entry(timebar, textvariable=self.time, width=26, font=('Segoe UI', 12)).pack(side='left')
+        ttk.Button(timebar, text='Şu anki Türkiye saati',
+                   command=lambda: self.time.set(turkey_now())).pack(side='left', padx=10)
+        self._button(clock_form, 'Saati ayarla', lambda: self.set_time(False),
+                     style='Primary.TButton').pack(anchor='w', pady=(10, 0))
+        ttk.Label(clock, text='Normal işlem açık oturumda ve geriye saat almada reddedilir. Saat bozulup kilitlendiğinde aşağıdaki yönetici kurtarmasını kullanın.',
+                  style='Muted.TLabel', wraplength=1000).pack(anchor='w', pady=10)
+        self._button(clock, 'Açık oturumları iptal et ve saati kurtar…', lambda: self.set_time(True),
+                     style='Danger.TButton').pack(anchor='w')
+        ttk.Label(clock, text='Kurtarma: geçmişi ve tamamlanan toplamları korur; tüm açık oturumları süre eklemeden iptal eder. Yeniden onay ister; otomatik tekrarlanmaz.',
+                  foreground='#a23e20', wraplength=1000).pack(anchor='w', pady=10)
+        ttk.Label(clock, text='Cihaz yazılımı güncel değilse saat kurtarma için Güncelleme sekmesini kullanın. Yeni kayıtlardan sonra eski sürüme dönmeyin.',
+                  style='Muted.TLabel', wraplength=1000).pack(anchor='w')
         self._build_updates(update_tab)
         self.footer = tk.StringVar(value='Cihaza bağlanmadan işlem yapılmaz. Otomatik yenileme isteğe bağlıdır.')
-        ttk.Label(base, textvariable=self.footer, wraplength=1150).pack(side='bottom', fill='x', pady=(8, 0), before=tabs)
+        ttk.Label(base, textvariable=self.footer, style='Muted.TLabel',
+                  wraplength=1150).pack(side='bottom', fill='x', pady=(8, 0), before=tabs)
         self._enable()
         root.protocol('WM_DELETE_WINDOW', self.close)
         self.timer = root.after(100, self._drain)
@@ -208,43 +305,117 @@ class Manager:
 
     def _build_overview(self, parent):
         self.auto_refresh = tk.BooleanVar(value=False)
-        self.dashboard_text = tk.StringVar(value='Canlı cihaz bağlantısı yok. Puantaj / Rapor bölümünden bilgisayar arşivini açabilirsiniz.')
-        self.health_text = tk.StringVar(value='Cihaz durumu: henüz okunmadı.')
-        bar = ttk.Frame(parent)
-        bar.pack(fill='x', pady=(0, 10))
-        ttk.Checkbutton(bar, text='Bağlantıdan sonra 30 saniyede bir otomatik oku',
-                        variable=self.auto_refresh, command=self._auto_refresh_changed).pack(side='left')
-        ttk.Label(bar, text='Yalnız okuma; program açık kalmalı.').pack(side='left', padx=12)
-        ttk.Label(parent, textvariable=self.dashboard_text, wraplength=1150, font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=5)
-        ttk.Label(parent, textvariable=self.health_text, wraplength=1150).pack(anchor='w', pady=5)
-        ttk.Label(parent, textvariable=self.archive_warning, foreground='#a23e20', wraplength=1150).pack(anchor='w', pady=5)
+        self.dashboard_text = tk.StringVar(value='Canlı cihaz bağlantısı yok. Puantaj bölümünden bilgisayar arşivini açabilirsiniz.')
+        self.health_text = tk.StringVar(value='')
+        self.metric_people = tk.StringVar(value='—')
+        self.metric_inside = tk.StringVar(value='—')
+        self.metric_clock = tk.StringVar(value='—')
+        self.metric_link = tk.StringVar(value='Yok')
+        self.metric_people_note = tk.StringVar(value='kayıtlı personel')
+        self.metric_inside_note = tk.StringVar(value='açık oturum')
+        self.metric_clock_note = tk.StringVar(value='Türkiye saati')
+        self.metric_link_note = tk.StringVar(value='veri yok')
+        header = ttk.Frame(parent)
+        header.pack(fill='x', pady=(0, 6))
+        ttk.Label(header, text='Genel bakış', style='Section.TLabel').pack(side='left')
+        ttk.Checkbutton(header, text='30 saniyede bir otomatik yenile',
+                        variable=self.auto_refresh, command=self._auto_refresh_changed).pack(side='right')
+        ttk.Label(parent, text='Cihaz bağlıyken personel durumu ve açık oturumlar burada özetlenir.',
+                  style='Muted.TLabel').pack(anchor='w', pady=(0, 10))
+        cards = ttk.Frame(parent)
+        cards.pack(fill='x', pady=(0, 10))
+        for column, (title, value, note) in enumerate((
+                ('Personel', self.metric_people, self.metric_people_note),
+                ('İçeride', self.metric_inside, self.metric_inside_note),
+                ('Cihaz saati', self.metric_clock, self.metric_clock_note),
+                ('Bağlantı', self.metric_link, self.metric_link_note))):
+            cards.columnconfigure(column, weight=1, uniform='metric')
+            self._metric_card(cards, column, title, value, note)
+        health = ttk.Frame(parent)
+        health.pack(fill='x', pady=(0, 8))
+        ttk.Label(health, text='Cihaz sağlığı', style='Field.TLabel').pack(side='left', padx=(0, 8))
+        self.health_chips = {}
+        for key, label in (('clock', 'Saat'), ('storage', 'Kayıt alanı'),
+                           ('rfid', 'Kart okuyucu'), ('oled', 'Ekran'), ('sd', 'SD yedek')):
+            variable = tk.StringVar(value=f'{label}: —')
+            chip = tk.Label(health, textvariable=variable, bg='#eef1f3', fg='#52616c',
+                            padx=9, pady=4, font=('Segoe UI', 9, 'bold'))
+            chip.pack(side='left', padx=(0, 5))
+            self.health_chips[key] = (variable, chip)
+        ttk.Label(parent, textvariable=self.dashboard_text, style='Muted.TLabel',
+                  wraplength=1150).pack(anchor='w', pady=(0, 4))
+        self.health_label = ttk.Label(parent, textvariable=self.health_text, foreground='#a23e20',
+                                      wraplength=1150)
+        self.archive_label = ttk.Label(parent, textvariable=self.archive_warning, foreground='#a23e20',
+                                       wraplength=1150)
         self.dashboard_tree = self._tree(parent, ('Personel', 'Sabit UID', 'Durum', 'Giriş zamanı', 'Tamamlanan', 'Açık süre (tahmini)'),
                                           (220, 150, 90, 185, 130, 170))
-        self.dashboard_tree.configure(displaycolumns=('Personel', 'Durum', 'Giriş zamanı', 'Tamamlanan', 'Açık süre (tahmini)'))
-        ttk.Label(parent, text='Açık süre tamamlanan mesaiye eklenmez. Eksik çıkışa otomatik bitiş yazılmaz. '
-                  'Devamsızlık için önce vardiya atayın; raporlar son alınan veri ve seçili kurallara göredir.',
-                  wraplength=1150).pack(anchor='w', pady=10)
+        self.dashboard_tree.configure(displaycolumns=('Personel', 'Durum', 'Giriş zamanı', 'Tamamlanan', 'Açık süre (tahmini)'),
+                                      height=4)
+        ttk.Label(parent, text='Açık süre tamamlanan toplama eklenmez; eksik çıkışa otomatik süre yazılmaz. '
+                  'Devamsızlık için vardiya atayın.',
+                  style='Muted.TLabel', wraplength=1150).pack(anchor='w', pady=(8, 0))
+        self.health_text.trace_add('write', lambda *_: self._sync_overview_notes())
+        self.archive_warning.trace_add('write', lambda *_: self._sync_overview_notes())
+        self._sync_overview_notes()
+
+    def _sync_overview_notes(self):
+        for label, variable in ((self.health_label, self.health_text),
+                                (self.archive_label, self.archive_warning)):
+            if variable.get().strip():
+                if not label.winfo_manager():
+                    label.pack(anchor='w', pady=(2, 0), before=self.dashboard_tree.master)
+            else:
+                label.pack_forget()
+
+    def _metric_card(self, parent, column, title, value, note):
+        card = tk.Frame(parent, bg='#ffffff', highlightbackground='#d9e1e7', highlightthickness=1)
+        card.grid(row=0, column=column, sticky='nsew', padx=(0, 8) if column < 3 else 0)
+        body = tk.Frame(card, bg='#ffffff', padx=14, pady=10)
+        body.pack(fill='both', expand=True)
+        tk.Label(body, text=title, bg='#ffffff', fg='#5b6b78',
+                 font=('Segoe UI', 9, 'bold'), anchor='w').pack(fill='x')
+        tk.Label(body, textvariable=value, bg='#ffffff', fg='#16232d',
+                 font=('Segoe UI', 20, 'bold'), anchor='w').pack(fill='x', pady=(1, 0))
+        tk.Label(body, textvariable=note, bg='#ffffff', fg='#5b6b78',
+                 font=('Segoe UI', 9), anchor='w').pack(fill='x')
+
+    def _set_health_chip(self, key, text, state):
+        variable, chip = self.health_chips[key]
+        variable.set(text)
+        colors = {'ok': ('#e4f5ec', '#0d6b45'), 'bad': ('#fdeceb', '#a4261f'),
+                  'off': ('#eef1f3', '#52616c')}
+        background, foreground = colors[state]
+        chip.configure(bg=background, fg=foreground)
 
     def _auto_refresh_changed(self):
         self.next_refresh = time.monotonic() + 30
 
     def _build_updates(self, parent):
-        ttk.Label(parent, text='Güncelleme', font=('Segoe UI', 14, 'bold')).pack(anchor='w')
-        ttk.Label(parent, text='Program ve cihaz yazılımı').pack(anchor='w', pady=8)
+        ttk.Label(parent, text='Güncelleme', style='Section.TLabel').pack(anchor='w')
+        ttk.Label(parent, text='Program ve cihaz yazılımını buradan doğrulayıp güncelleyin.',
+                  style='Muted.TLabel').pack(anchor='w', pady=(2, 10))
         self.update_text = tk.StringVar(value='Kendiliğinden indirme/yükleme yok. Güncellemeleri kontrol edin.')
         self.device_update_text = tk.StringVar(value='Cihaz bağlı değil. İlk cihaz yazılımı güncellemesi bir kez USB gerektirir.')
-        ttk.Label(parent, textvariable=self.update_text, wraplength=1000).pack(anchor='w', pady=8)
-        ttk.Label(parent, textvariable=self.device_update_text, wraplength=1000).pack(anchor='w', pady=8)
+        update_card = ttk.LabelFrame(parent, text='Durum', style='Card.TLabelframe', padding=(12, 8))
+        update_card.pack(fill='x')
+        ttk.Label(update_card, textvariable=self.update_text, wraplength=1000).pack(anchor='w', pady=4)
+        ttk.Label(update_card, textvariable=self.device_update_text,
+                  style='Muted.TLabel', wraplength=1000).pack(anchor='w', pady=4)
         row = ttk.Frame(parent)
         row.pack(fill='x', pady=12)
-        self.updates_check_btn = ttk.Button(row, text='Güncellemeleri kontrol et', command=self.check_updates)
+        self.updates_check_btn = ttk.Button(row, text='Güncellemeleri kontrol et', command=self.check_updates,
+                                           style='Primary.TButton')
         self.updates_check_btn.pack(side='left')
         self.updates_download_btn = ttk.Button(row, text='Güncellemeyi indir', command=self.download_updates)
         self.updates_download_btn.pack(side='left', padx=8)
-        self.updates_app_btn = ttk.Button(parent, text='Programı güncelle…', command=self.install_app_update)
-        self.updates_app_btn.pack(anchor='w', pady=8)
-        self.updates_firmware_btn = ttk.Button(parent, text='Cihaz yazılımını güncelle…', command=self.install_firmware_update)
-        self.updates_firmware_btn.pack(anchor='w', pady=8)
+        actions = ttk.LabelFrame(parent, text='Yükleme', style='Card.TLabelframe', padding=(12, 8))
+        actions.pack(fill='x')
+        self.updates_app_btn = ttk.Button(actions, text='Programı güncelle…', command=self.install_app_update)
+        self.updates_app_btn.pack(side='left')
+        self.updates_firmware_btn = ttk.Button(actions, text='Cihaz yazılımını güncelle…',
+                                              command=self.install_firmware_update)
+        self.updates_firmware_btn.pack(side='left', padx=8)
         ttk.Label(parent, text='Güncellemeler doğrulanır; eski sürüme otomatik dönülmez. '
             'Program güncellemesinde eski sürüm yalnız sağlık kontrolü sırasında tutulur; yeni sürüm doğrulanınca silinir, açılmazsa geri alınır. '
             'Kayıt ve ayarlar değiştirilmez. Cihaz yazılımı yalnız aynı ağdaki, açık oturumu olmayan cihaza gönderilir.',
@@ -354,20 +525,38 @@ class Manager:
         elapsed = max(0, int(time.monotonic() - self.last_success_tick)) if self.last_success_tick is not None else 0
         people = self.state['employees']
         inside = sum(bool(person['inside']) for person in people)
-        link = 'DEMO' if self.demo else ('Bağlı' if self.online else 'Bağlantı yok / eski veri')
-        stamp = self.last_success_at or 'henüz tutarlı kayıt görüntüsü alınmadı'
-        self.dashboard_text.set(f'{link} | İçeride: {inside} / {len(people)} | Son veri: {stamp} | {elapsed} sn önce')
+        link = 'DEMO' if self.demo else ('Bağlı' if self.online else 'Yok')
+        if self.last_success_at:
+            self.dashboard_text.set('Son veri: az önce' if elapsed < 2 else f'Son veri: {elapsed} sn önce')
+        else:
+            self.dashboard_text.set('Son veri yok.')
+        self.metric_people.set(str(len(people)))
+        self.metric_inside.set(str(inside))
+        clock = format_local_time(self.state.get('now')) if self.state.get('clock_ok') else '—'
+        self.metric_clock.set(clock[11:] if len(clock) > 11 else clock)
+        self.metric_link.set(link)
+        self.metric_link_note.set('son veri alındı' if self.last_success_at else 'veri yok')
         def health(key):
             return 'Tamam' if self.state.get(key) else 'Sorun'
         drift = ''
-        if self.state.get('clock_ok') and self.state.get('now'):
+        if not self.demo and self.state.get('clock_ok') and self.state.get('now'):
             difference = int(self.state['now']) + (elapsed if self.online else 0) - encode_local_time(turkey_now())
             if abs(difference) > 120:
-                drift = ' | Bilgisayar ve cihaz saati farklı; saatleri kontrol edin'
-        self.health_text.set('Saat: ' + health('clock_ok') + ' | Kayıt alanı: ' + health('storage_ok') +
-                             ' | Kart okuyucu: ' + health('rfid_ok') + ' | SD yedek: ' +
-                             (health('sd_ok') if self.state.get('sd_enabled') else 'kapalı') +
-                             drift + ' | Saat kurtarma kaydı çalışma süresi değildir.')
+                drift = 'Bilgisayar ve cihaz saati farklı; saatleri kontrol edin.'
+        self._set_health_chip('clock', 'Saat: ' + health('clock_ok'),
+                              'ok' if self.state.get('clock_ok') else 'bad')
+        self._set_health_chip('storage', 'Kayıt alanı: ' + health('storage_ok'),
+                              'ok' if self.state.get('storage_ok') else 'bad')
+        self._set_health_chip('rfid', 'Kart okuyucu: ' + health('rfid_ok'),
+                              'ok' if self.state.get('rfid_ok') else 'bad')
+        self._set_health_chip('oled', 'Ekran: ' + health('oled_ok'),
+                              'ok' if self.state.get('oled_ok') else 'bad')
+        if self.state.get('sd_enabled'):
+            self._set_health_chip('sd', 'SD yedek: ' + health('sd_ok'),
+                                  'ok' if self.state.get('sd_ok') else 'bad')
+        else:
+            self._set_health_chip('sd', 'SD yedek: kapalı', 'off')
+        self.health_text.set(drift)
         rows = []
         for person in people:
             live = int(person.get('live_seconds', 0))
@@ -480,8 +669,9 @@ class Manager:
                 return
         self._save_connection()
 
-    def _button(self, parent, text, command):
-        button = ttk.Button(parent, text=text, command=command)
+    def _button(self, parent, text, command, style=None):
+        button = ttk.Button(parent, text=text, command=command,
+                            style=style) if style else ttk.Button(parent, text=text, command=command)
         self.actions.append(button)
         return button
 
@@ -494,11 +684,9 @@ class Manager:
             tree.heading(col, text=col)
             tree.column(col, width=width, minwidth=50)
         scroll = ttk.Scrollbar(frame, orient='vertical', command=tree.yview)
-        horizontal = ttk.Scrollbar(frame, orient='horizontal', command=tree.xview)
-        tree.configure(yscrollcommand=scroll.set, xscrollcommand=horizontal.set)
+        tree.configure(yscrollcommand=scroll.set)
         tree.grid(row=0, column=0, sticky='nsew')
         scroll.grid(row=0, column=1, sticky='ns')
-        horizontal.grid(row=1, column=0, sticky='ew')
         frame.rowconfigure(0, weight=1)
         frame.columnconfigure(0, weight=1)
         return tree
@@ -553,6 +741,8 @@ class Manager:
                 self._enable()
                 if error:
                     self.online = False
+                    self.status_text.set('Cihaz bağlantısı kurulamadı veya son veri geçersiz.')
+                    self.status_label.configure(fg='#a4261f')
                     self._render_dashboard()
                     self.footer.set('İşlem başarısız / sonucu belirsiz. Önce Yenile ile durumu kontrol edin.')
                     if not quiet:
@@ -602,6 +792,8 @@ class Manager:
         self.online = False
         self.last_success_at = None
         self.last_success_tick = None
+        self.status_text.set('Cihaz bağlanıyor…')
+        self.status_label.configure(fg='#5b6b78')
         self.new_person()
         self.people.delete(*self.people.get_children())
         self.events_tree.delete(*self.events_tree.get_children())
@@ -639,6 +831,7 @@ class Manager:
         inside = sum(bool(e['inside']) for e in state['employees'])
         clock = format_local_time(state.get('now')) if state.get('clock_ok') else 'Ayarlanmalı'
         self.status_text.set(f"Cihaz bağlı  |  Saat: {clock}  |  İçeride: {inside}")
+        self.status_label.configure(fg='#0d6b45')
         if not state.get('personnel_management'):
             self.identity_text.set('Cihaz yazılımı güncel değil; ad ekle/düzenle çalışır, kart değiştirme ve saat kurtarma için güncelleme gerekir.')
         self._enable()

@@ -7,6 +7,7 @@ Exports/backups write solely to a path the user explicitly picks.
 import copy
 from datetime import date, timedelta
 from pathlib import Path
+import re
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -48,12 +49,14 @@ class ReportsPanel(ttk.Frame):
 
     # -- construction -----------------------------------------------------
     def _build(self):
-        ttk.Label(self, text='Puantaj Raporları — yerel arşiv', font=('Segoe UI', 14, 'bold')).pack(anchor='w')
-        ttk.Label(self, wraplength=1040, foreground='#304c64', justify='left', text=(
-            'Yalnızca bilgisayardaki arşiv anlık görüntüsü okunur; cihaza bağlanılmaz, canlı veri çekilmez. '
-            'Eksik günler motor tarafından işaretlenir; bu panel kayıtları tahmin etmez veya onarmaz; sonuçlar '
-            'puantaj/ücret için tek kaynak değildir.')).pack(anchor='w', pady=(2, 8))
-        archive = ttk.Frame(self)
+        ttk.Label(self, text='Puantaj raporları', style='Section.TLabel').pack(anchor='w')
+        ttk.Label(self, wraplength=1040, style='Muted.TLabel', justify='left', text=(
+            'Yalnızca bu bilgisayardaki arşiv okunur; cihaza bağlanılmaz. Sonuçlar puantaj/ücret için '
+            'tek kaynak değildir; eksik günler işaretlenir, kayıtlar tahmin edilmez.')).pack(anchor='w', pady=(2, 8))
+        filter_box = ttk.LabelFrame(self, text='Rapor aralığı', style='Card.TLabelframe',
+                                    padding=(10, 6))
+        filter_box.pack(fill='x', pady=(0, 8))
+        archive = ttk.Frame(filter_box)
         archive.pack(fill='x', pady=(0, 6))
         ttk.Label(archive, text='PC arşivi').pack(side='left', padx=(0, 6))
         self.source_var = tk.StringVar()
@@ -63,7 +66,7 @@ class ReportsPanel(ttk.Frame):
         ttk.Button(archive, text='Kaynakları yenile', command=self.update_sources).pack(side='left', padx=(0, 10))
         self.meta_var = tk.StringVar(value='Henüz yerel arşiv seçilmedi.')
         ttk.Label(archive, textvariable=self.meta_var, foreground='#17324d').pack(side='left')
-        dates = ttk.Frame(self)
+        dates = ttk.Frame(filter_box)
         dates.pack(fill='x', pady=(0, 6))
         self.start_var = tk.StringVar(value=turkey_now()[:10])
         self.end_var = tk.StringVar(value=turkey_now()[:10])
@@ -74,8 +77,8 @@ class ReportsPanel(ttk.Frame):
         ttk.Button(dates, text='Bu hafta', command=self.preset_week).pack(side='left', padx=(0, 4))
         ttk.Button(dates, text='Bu ay', command=self.preset_month).pack(side='left', padx=(0, 4))
         ttk.Button(dates, text='Raporu yenile', command=self.refresh_report).pack(side='left', padx=(10, 0))
-        filters = ttk.Frame(self)
-        filters.pack(fill='x', pady=(0, 6))
+        filters = ttk.Frame(filter_box)
+        filters.pack(fill='x')
         self.person_var, self.dept_var = tk.StringVar(value=ALL), tk.StringVar(value=ALL)
         ttk.Label(filters, text='Personel').pack(side='left', padx=(0, 4))
         self.person_combo = ttk.Combobox(filters, textvariable=self.person_var, state='readonly', width=30)
@@ -374,12 +377,17 @@ class ReportsPanel(ttk.Frame):
 
     def _show_meta(self, report):
         source = report.get('source') or self.source or '—'
-        self.meta_var.set('Kaynak: ' + str(source) + ' · yalnızca yerel arşiv (canlı cihaz verisi değil)')
-        self.info_var.set('Anlık görüntü: ' + str(report.get('synced_at') or '—') +
+        self.meta_var.set('Kaynak: ' + str(source) + ' · yerel arşiv')
+        stamp = str(report.get('synced_at') or '—')
+        if len(stamp) >= 19 and stamp[10] in ' T':
+            stamp = stamp[:10] + ' ' + stamp[11:19]
+        self.info_var.set('Son arşiv: ' + stamp +
                           ' · aralık: ' + str(report.get('start') or '—') + ' → ' +
                           str(report.get('end') or '—'))
         warnings = report.get('warnings') or []
-        self.warn_var.set('Uyarılar: ' + (' • '.join(str(item) for item in warnings) if warnings else 'yok'))
+        # Keep raw card IDs out of the user-facing warning line.
+        friendly = [re.sub(r'^[0-9A-Fa-f]{8,20}: ', 'Personel: ', str(item)) for item in warnings]
+        self.warn_var.set('Uyarılar: ' + (' • '.join(friendly) if friendly else 'yok'))
 
     # -- exports ----------------------------------------------------------
     def _save_path(self, title, suffix, kind, initial):

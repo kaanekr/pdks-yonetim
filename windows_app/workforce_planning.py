@@ -602,7 +602,7 @@ class PlanningPanel(ttk.Frame):
         """Keep every planning control accessible on 1366x768 Windows screens."""
         outer = ttk.Frame(self.notebook)
         self.notebook.add(outer, text=title)
-        canvas = tk.Canvas(outer, highlightthickness=0, background='#eef2f6')
+        canvas = tk.Canvas(outer, highlightthickness=0, background='#eef2f5')
         vertical = ttk.Scrollbar(outer, orient='vertical', command=canvas.yview)
         horizontal = ttk.Scrollbar(outer, orient='horizontal', command=canvas.xview)
         canvas.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)

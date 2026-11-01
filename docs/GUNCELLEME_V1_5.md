@@ -50,7 +50,12 @@ Yalnız cihaz yazılımı alanı güncellenir; kayıtlar, Wi-Fi, kimlik bilgiler
 dosyalar korunur. PC yedeği cihazın tam flash/dosya sistemi yedeği değildir ve cihaza
 geri yükleme özelliği yoktur. Güncelleme için port yönlendirmesi açmayın.
 
-Cihazın web paneli yeni sürümlerde cihaz yazılımının içinde gelir; kablosuz güncelleme
-ile birlikte yenilenir ve kayıt alanına ayrıca dosya yüklenmez. 1.5.4 Windows ve cihaz
-arayüzleri sadeleştirilmiştir; ham kart kimliği, olay sırası, sürüm/özet gibi teknik
-alanlar ana ekranlarda gösterilmez.
+Cihazın web paneli cihaz yazılımının içinde gelir; kablosuz güncelleme ile birlikte
+yenilenir ve kayıt alanına ayrıca dosya yüklenmez. Windows ve cihaz arayüzleri
+1.5.4/1.5.5 sürümlerinde sadeleştirilmiştir; ham kart kimliği, olay sırası, sürüm/özet
+gibi teknik alanlar ana ekranlarda gösterilmez. Yeni panelin görünmesi için tarayıcıyı
+yenileyin.
+
+Windows 1.5.6 sürümünde bağlantı alanı, özet kartları, sekmeler ve tablolar yenilendi.
+Cihaz yazılımı 1.5.5 ile uyumludur; 1.5.6 firmware yalnız sürüm hizalamasıdır ve
+isteğe bağlıdır.

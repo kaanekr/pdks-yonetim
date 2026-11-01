@@ -27,10 +27,10 @@ TOOLS = ('check.ps1', 'embed_panel.py', 'release_signing.py', 'prepare_github_re
          'test_buzzer.py', 'test_feedback.py', 'test_attendance_reset.py', 'test_console.py',
          'test_soft_sd_spi.py', 'test_panel.py', 'panel_fixture.py', 'test_display.py')
 NOTES = ('İmzalı GitHub güncellemeleri: Windows programı ve aynı yerel ağdaki ESP8266 firmware’i. '
-         'Windows 1.5.4 sade son kullanıcı arayüzü sunar; UID, sıra numarası, sürüm/hash ve OTA ayrıntıları '
-         'ana ekranlardan kaldırılmıştır. Başarılı güncellemeden sonra eski EXE silinir; eski sürüm geride bırakılmaz. '
-         '1.5.5 firmware yeni web panelini kendi içinde taşır ve bu gömülü paneli sunar; panel imzalı OTA ile '
-         'güncellenir; LittleFS, personel, ayarlar ve mesai kayıtları korunur. '
+         'Windows 1.5.6 arayüzü yenilendi: kompakt cihaz bağlantısı, özet kartları, daha kısa sekmeler ve '
+         'okunaklı tablolar. UID, sıra numarası, sürüm/hash ve OTA ayrıntıları ana ekranlardan uzak tutulur. '
+         'Başarılı güncellemeden sonra eski EXE silinir; eski sürüm geride bırakılmaz. '
+         '1.5.6 firmware yalnız sürüm hizalamasıdır; web paneli ve cihaz işlevleri 1.5.5 ile aynıdır. '
          '1.5.2, 1.5.1 firmware OTA hazırlığındaki BearSSL ikinci yığın hatasını düzeltmişti. '
          'İlk OTA kurulumu bir kez özel USB kurulumu gerektirir. '
          'Kendiliğinden indirme/yükleme ve POST tekrarı yoktur. '
